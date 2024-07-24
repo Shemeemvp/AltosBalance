@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-const Index = () => {
+function Index() {
   const [dropdownVisible, setDropdownVisible] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleMouseEnter = () => {
     setDropdownVisible(true);
@@ -13,18 +15,6 @@ const Index = () => {
   };
 
   return (
-    // <div>
-    //   <Header />
-    //   <MainBanner />
-    //   <RequestForm />
-    //   <Services />
-    //   <FunFacts />
-    //   <MoreInfo />
-    //   <Testimonials />
-    //   <CallbackForm />
-    //   <Partners />
-    //   <Footer />
-    // </div>
     <>
       {/* ***** Preloader Start ***** */}
       <div id="preloader">
@@ -39,7 +29,7 @@ const Index = () => {
       <header className="">
         <nav className="navbar navbar-expand-lg">
           <div className="container">
-            <a className="navbar-brand" href="index.html">
+            <a className="navbar-brand" href="#">
               <h2>AltosBalance</h2>
             </a>
             <button
@@ -77,35 +67,33 @@ const Index = () => {
                   </a>
                 </li>
                 <li
-                  class="nav-item"
+                  className="nav-item"
                   onMouseEnter={handleMouseEnter}
                   onMouseLeave={handleMouseLeave}
                 >
-                  <a href="#" class="nav-link">
-                    Sign Up <i class="bi bi-chevron-down"></i>
+                  <a href="#" className="nav-link">
+                    Sign Up <i className="bi bi-chevron-down"></i>
                   </a>
                   <ul
                     className={`${dropdownVisible ? " show_reg_options" : ""}`}
                     id="regMenu"
-                    style={{display: dropdownVisible ? "block" : "none"}}
+                    style={{ display: dropdownVisible ? "block" : "none" }}
                   >
                     <li>
-                      <Link className="regOption" to="/distributor_registration">
-                        Distributor Registration
-                      </Link>
+                      <Link to="/login">Distributor Registration</Link>
                     </li>
                     <li>
-                      <Link className="regOption" to="/company_registration">
+                      <Link to="/company_registration">
                         Company Registration
                       </Link>
                     </li>
                     <li>
-                      <Link className="regOption" to="/staff_registration">Staff Registration</Link>
+                      <Link to="/staff_registration">Staff Registration</Link>
                     </li>
                   </ul>
                 </li>
                 <a
-                  href="#"
+                  onClick={() => navigate("/login")}
                   style={{ width: "fit-content", height: "fit-content" }}
                   className="filled-button"
                 >
@@ -138,8 +126,8 @@ const Index = () => {
                 <p>
                   This finance HTML template is 100% free of charge provided by
                   TemplateMo. This is one-page version added in 2021 February.{" "}
-                  <a href="index.html">Multiple-page version</a> with different
-                  HTML pages are also available.
+                  <a href="#">Multiple-page version</a> with different HTML
+                  pages are also available.
                 </p>
                 <a href="contact.html" className="filled-button">
                   contact us
@@ -164,7 +152,7 @@ const Index = () => {
                   ZIP file on any template download website. Please contact
                   TemplateMo for more detail.
                 </p>
-                <a href="services.html" className="filled-button">
+                <a href="#" className="filled-button">
                   our services
                 </a>
               </div>
@@ -184,10 +172,10 @@ const Index = () => {
                 <p>
                   You can download, edit and use this finance business layout
                   for your commercial websites. You just need to put
-                  class="external" if you wish to link to external URLs in the
-                  main menu.
+                  className="external" if you wish to link to external URLs in
+                  the main menu.
                 </p>
-                <a href="about.html" className="filled-button">
+                <a href="#" className="filled-button">
                   learn more
                 </a>
               </div>
@@ -208,7 +196,7 @@ const Index = () => {
               </span>
             </div>
             <div className="col-md-4">
-              <a href="contact.html" className="border-button">
+              <a href="#" className="border-button">
                 Contact Us
               </a>
             </div>
@@ -715,6 +703,6 @@ const Index = () => {
       </footer>
     </>
   );
-};
+}
 
 export default Index;
