@@ -83,9 +83,9 @@ function Index() {
                       <Link to="/login">Distributor Registration</Link>
                     </li>
                     <li>
-                      <Link to="/company_registration">
+                      <a onClick={()=>navigate("/company_registration")}>
                         Company Registration
-                      </Link>
+                      </a>
                     </li>
                     <li>
                       <Link to="/staff_registration">Staff Registration</Link>
