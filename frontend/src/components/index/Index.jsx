@@ -15,7 +15,7 @@ function Index() {
   };
 
   return (
-    <>
+    <div id="indexPage">
       {/* ***** Preloader Start ***** */}
       <div id="preloader">
         <div className="jumper">
@@ -701,7 +701,7 @@ function Index() {
           </div>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
 

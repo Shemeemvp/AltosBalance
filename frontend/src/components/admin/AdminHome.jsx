@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import './Admin.scss';
+// import './Admin.scss';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 // import { useTranslation } from "react-i18next";

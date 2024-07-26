@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Collapse } from "react-bootstrap";
 import { Trans } from "react-i18next";
+import './styles/Sidebar.css'
 
 const Sidebar = () => {
   const [menuState, setMenuState] = useState({});

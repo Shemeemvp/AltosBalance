@@ -2,6 +2,8 @@ import React from "react";
 import { Dropdown } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { Trans } from "react-i18next";
+import './styles/Navbar.css'
+import 'bootstrap/dist/css/bootstrap.css';
 
 const Navbar = () => {
   const toggleOffcanvas = () => {
@@ -13,7 +15,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
+    <nav className="admin-nav navbar default-layout-navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row">
       <div className="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
         <Link className="navbar-brand brand-logo" to="/">
           <img src={require("../../assets/images/logo.svg")} alt="logo" />
