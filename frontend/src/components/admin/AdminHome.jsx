@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-// import './Admin.scss';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
+import './styles/Layout.css'
 // import { useTranslation } from "react-i18next";
 
 function AdminHome() {
@@ -26,22 +26,21 @@ function AdminHome() {
     // }
     window.scrollTo(0, 0);
 
-    const fullPageLayoutRoutes = [
-      '/user-pages/login-1', 
-      '/user-pages/register-1', 
-      '/user-pages/lockscreen', 
-      '/error-pages/error-404', 
-      '/error-pages/error-500', 
-      '/general-pages/landing-page'
-    ];
+    // const fullPageLayoutRoutes = [
+    //   '/user-pages/register-1', 
+    //   '/user-pages/lockscreen', 
+    //   '/error-pages/error-404', 
+    //   '/error-pages/error-500', 
+    //   '/general-pages/landing-page'
+    // ];
 
-    if (fullPageLayoutRoutes.includes(location.pathname)) {
-      setIsFullPageLayout(true);
-      document.querySelector('.page-body-wrapper').classList.add('full-page-wrapper');
-    } else {
-      setIsFullPageLayout(false);
-      document.querySelector('.page-body-wrapper').classList.remove('full-page-wrapper');
-    }
+    // if (fullPageLayoutRoutes.includes(location.pathname)) {
+    //   setIsFullPageLayout(true);
+    //   document.querySelector('.page-body-wrapper').classList.add('full-page-wrapper');
+    // } else {
+    //   setIsFullPageLayout(false);
+    //   document.querySelector('.page-body-wrapper').classList.remove('full-page-wrapper');
+    // }
   };
   return (
     <div className="container-scroller">
