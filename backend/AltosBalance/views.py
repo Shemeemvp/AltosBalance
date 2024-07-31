@@ -206,3 +206,57 @@ def Login(request):
             {"status": False, "message": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+    
+@api_view(("POST",))
+def add_payment_terms(request):
+    try:
+        num = int(request.data["num"])
+        select = request.data["value"]
+        if select == "Years":
+            days = int(num) * 365
+            pt = PaymentTerms(
+                payment_terms_number=num, payment_terms_value=select, days=days
+            )
+            pt.save()
+            return Response({"status": True}, status=status.HTTP_201_CREATED)
+        else:
+            days = int(num * 30)
+            pt = PaymentTerms(
+                payment_terms_number=num, payment_terms_value=select, days=days
+            )
+            pt.save()
+            return Response({"status": True}, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(["GET"])
+def getPaymentTerms(request):
+    try:
+        terms = PaymentTerms.objects.all()
+        if terms:
+            serializer = PaymentTermsSerializer(terms, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return JsonResponse({"status": False}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(("DELETE",))
+def delete_payment_terms(request, id):
+    try:
+        term = PaymentTerms.objects.get(id=id)
+        term.delete()
+        return Response({"status": True}, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

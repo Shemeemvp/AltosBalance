@@ -1,15 +1,12 @@
 import React from "react";
 import { Dropdown } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Trans } from "react-i18next";
 import './styles/Navbar.css'
 import 'bootstrap/dist/css/bootstrap.css';
 import logo from '../../assets/images/logo.svg'
 
 const Navbar = () => {
-
-  const navigate = useNavigate();
-
   const toggleOffcanvas = () => {
     document.querySelector(".sidebar-offcanvas").classList.toggle("active");
   };
@@ -58,7 +55,7 @@ const Navbar = () => {
         <div className="right">
           <ul className="navbar-nav navbar-nav-right d-flex flex-row">
             <li className="nav-item ml-2">
-              <Dropdown alignRight>
+            <Dropdown alignRight>
                 <Dropdown.Toggle className="nav-link count-indicator navDropButtons">
                   <i className="mdi mdi-bell-outline"></i>
                   <span className="count-symbol bg-danger"></span>
@@ -91,6 +88,15 @@ const Navbar = () => {
                 </Dropdown.Menu>
               </Dropdown>
             </li>
+            {/* <li className="nav-item nav-logout d-none d-lg-block">
+              <a
+                className="nav-link"
+                href="!#"
+                onClick={(event) => event.preventDefault()}
+              >
+                <i className="mdi mdi-power"></i>
+              </a>
+            </li> */}
             <li className="nav-item nav-profile ml-2 mr-2">
               <Dropdown alignRight>
                 <Dropdown.Toggle className="nav-link d-flex align-items-center navDropButtons">
@@ -109,7 +115,15 @@ const Navbar = () => {
                 </Dropdown.Toggle>
                 <Dropdown.Menu className="navbar-dropdown">
                   <Dropdown.Item
-                    onClick={() => navigate('/admin_home')}
+                    href="!#"
+                    onClick={(evt) => evt.preventDefault()}
+                  >
+                    <i className="mdi mdi-account mr-2 text-success"></i>
+                    <Trans>Profile</Trans>
+                  </Dropdown.Item>
+                  <Dropdown.Item
+                    href="!#"
+                    onClick={(evt) => evt.preventDefault()}
                   >
                     <i className="mdi mdi-home mr-2 text-secondary"></i>
                     <Trans>Dashboard</Trans>

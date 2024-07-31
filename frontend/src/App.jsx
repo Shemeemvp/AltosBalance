@@ -4,6 +4,7 @@ import Index from "./components/index/Index";
 import SignIn from "./components/SignIn/SignIn";
 import AdminHome from "./components/admin/AdminHome";
 import CompanyReg from "./components/company/CompanyReg";
+import PaymentTerms from "./components/admin/PaymentTerms";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
 
           <Route element={<AdminPrivateRoutes />}>
             <Route path="/admin_home" element={<AdminHome />}></Route>
+            <Route path="/payment_terms/new_term" element={<PaymentTerms />}></Route>
           </Route>
         </Routes>
       </BrowserRouter>
