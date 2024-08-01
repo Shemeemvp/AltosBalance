@@ -16,3 +16,33 @@ class PaymentTermsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentTerms
         fields = '__all__'
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = '__all__'
+
+class DistributorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Distributor
+        fields = '__all__'
+
+class StaffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Staff
+        fields = '__all__'
+
+class ModulesListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Modules_List
+        fields = '__all__'
+
+class PaymentTermsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentTerms
+        fields = '__all__'

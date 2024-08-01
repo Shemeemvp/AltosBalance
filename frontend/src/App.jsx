@@ -5,6 +5,8 @@ import SignIn from "./components/SignIn/SignIn";
 import AdminHome from "./components/admin/AdminHome";
 import CompanyReg from "./components/company/CompanyReg";
 import PaymentTerms from "./components/admin/PaymentTerms";
+import CompanyReg2 from "./components/company/CompanyReg2";
+import Modules from "./components/company/Modules";
 
 function App() {
   return (
@@ -14,8 +16,8 @@ function App() {
           <Route path="/" element={<Index />}></Route>
           <Route path="/login" element={<SignIn />}></Route>
           <Route path="/company_registration" element={<CompanyReg />}></Route>
-          {/* <Route path="/Company_Registration2" element={<CompanyReg2 />}></Route> */}
-          {/* <Route path="/modules_list" element={<Modules />}></Route> */}
+          <Route path="/company_registration2" element={<CompanyReg2 />}></Route>
+          <Route path="/modules_list" element={<Modules />}></Route>
           {/* <Route path="/wrong" element={<Wrong />}></Route> */}
           {/* <Route path="/term_update_modules" element={<TermUpdateModules />}></Route> */}
 

@@ -37,10 +37,10 @@ function CompanyReg() {
     let valid = validate();
     if (valid) {
       const data = {
-        First_name: firstName,
-        Last_name: lastName,
-        User_name: username,
-        Email: email,
+        first_name: firstName,
+        last_name: lastName,
+        username: username,
+        email: email,
         password: password,
       };
       axios
@@ -48,16 +48,10 @@ function CompanyReg() {
           headers: { "Content-Type": "application/json" },
         })
         .then((res) => {
-          console.log("RESPONSE==", res);
           if (res.data.status) {
-            Cookies.set("Login_id", res.data.data.Login_Id);
-            navigate("/Company_Registration2");
+            Cookies.set("user_id", res.data.data.user);
+            navigate("/company_registration2");
           }
-
-          // Toast.fire({
-          //   icon: "success",
-          //   title: "Registered successfully",
-          // });
         })
         .catch((err) => {
           console.log("ERROR==", err);

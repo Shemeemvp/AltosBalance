@@ -17,13 +17,13 @@ function Index() {
   return (
     <div id="indexPage">
       {/* ***** Preloader Start ***** */}
-      <div id="preloader">
+      {/* <div id="preloader">
         <div className="jumper">
           <div />
           <div />
           <div />
         </div>
-      </div>
+      </div> */}
       {/* ***** Preloader End ***** */}
       {/* Header */}
       <header className="">

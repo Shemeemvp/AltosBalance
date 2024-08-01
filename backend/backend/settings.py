@@ -99,7 +99,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-
+AUTH_USER_MODEL = 'AltosBalance.User'
 
 # White listing the localhost:3000 port
 # for React
