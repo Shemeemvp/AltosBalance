@@ -64,10 +64,10 @@ def Login(request):
 
         # -------distributor ------
 
-        # if Fin_Login_Details.objects.filter(
-        #     User_name=user_name, password=passw
+        # if User.objects.filter(
+        #     username=user_name, password=passw
         # ).exists():
-        #     data = Fin_Login_Details.objects.get(User_name=user_name, password=passw)
+        #     data = User.objects.get(username=user_name, password=passw)
         #     if data.User_Type == "Distributor":
         #         did = Distributor.objects.get(Login_Id=data.id)
         #         if did.Admin_approval_status == "Accept":
@@ -165,10 +165,10 @@ def Login(request):
         #             )
 
         #     if data.User_Type == "Staff":
-        #         cid = Fin_Staff_Details.objects.get(Login_Id=data.id)
+        #         cid = Staff.objects.get(Login_Id=data.id)
         #         if cid.Company_approval_status == "Accept":
         #             request.session["s_id"] = data.id
-        #             com = Fin_Staff_Details.objects.get(Login_Id=data.id)
+        #             com = Staff.objects.get(Login_Id=data.id)
 
         #             current_day = date.today()
         #             if current_day > com.company_id.End_date:
@@ -293,7 +293,7 @@ def companyReg_action(request):
         if serializer.is_valid():
             serializer.save()
             user = User.objects.get(id=serializer.data["id"])
-            user.set_password(request.data['password'])
+            user.set_password(request.data["password"])
             user.save()
 
             code_length = 8
@@ -330,6 +330,7 @@ def companyReg_action(request):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+
 @api_view(("PUT",))
 @parser_classes((MultiPartParser, FormParser))
 def companyReg2_action2(request):
@@ -341,9 +342,7 @@ def companyReg2_action2(request):
         dis_code = request.data.get("distId", "")
         distr_id = None
         if dis_code:
-            if not Distributor.objects.filter(
-                distributor_code=dis_code
-            ).exists():
+            if not Distributor.objects.filter(distributor_code=dis_code).exists():
                 return Response(
                     {
                         "status": False,
@@ -352,9 +351,7 @@ def companyReg2_action2(request):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             else:
-                distr_id = Distributor.objects.get(
-                    distributor_code=dis_code
-                )
+                distr_id = Distributor.objects.get(distributor_code=dis_code)
                 # request.data["Distributor_id"] = Distributor.objects.filter(distributor_code=dis_code).first().id
                 # print('distrId==',request.data['Distributor_id'])
         serializer = CompanySerializer(com, data=request.data, partial=True)
@@ -419,9 +416,7 @@ def addModules(request):
 
             # Adding Default loan terms under company by TINTO MT
             Loan_Term.objects.create(company=com, duration=3, term="MONTH", days=90)
-            Loan_Term.objects.create(
-                company=com, duration="6", term="MONTH", days=180
-            )
+            Loan_Term.objects.create(company=com, duration="6", term="MONTH", days=180)
             Loan_Term.objects.create(company=com, duration=1, term="YEAR", days=365)
 
             # Adding default accounts for companies
@@ -1867,14 +1862,10 @@ def addModules(request):
 
             # Creating default transport entries with company information---aiswarya
             Eway_Transportation.objects.create(Name="Bus", Type="Road", company=com)
-            Eway_Transportation.objects.create(
-                Name="Train", Type="Rail", company=com
-            )
+            Eway_Transportation.objects.create(Name="Train", Type="Rail", company=com)
             Eway_Transportation.objects.create(Name="Car", Type="Road", company=com)
 
-            Stock_Reason.objects.create(
-                company=com, user=data, reason="Stock on fire"
-            )
+            Stock_Reason.objects.create(company=com, user=data, reason="Stock on fire")
             Stock_Reason.objects.create(
                 company=com, user=data, reason="High demand of goods"
             )
@@ -1904,6 +1895,469 @@ def addModules(request):
             status=status.HTTP_404_NOT_FOUND,
         )
     except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("POST",))
+def staffReg_action(request):
+    if not Company.objects.filter(company_code=request.data["company_code"]).exists():
+        return Response(
+            {
+                "status": False,
+                "message": "This company code does not exists. try again.",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    elif User.objects.filter(username=request.data["username"]).exists():
+        return Response(
+            {
+                "status": False,
+                "message": "This username already exists. Sign up again",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    elif Staff.objects.filter(email=request.data["email"]).exists():
+        return Response(
+            {
+                "status": False,
+                "message": "This email already exists. Sign up again",
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    else:
+        com = Company.objects.get(company_code=request.data["company_code"])
+
+        request.data["role"] = "Staff"
+
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            user = User.objects.get(id=serializer.data["id"])
+
+            user.set_password(request.data["password"])
+            user.save()
+
+            request.data["user"] = user.id
+            request.data["company_approval_status"] = "Null"
+            request.data["company"] = com.id
+            staffSerializer = StaffSerializer(data=request.data)
+            if staffSerializer.is_valid():
+                staffSerializer.save()
+                return Response(
+                    {"status": True, "data": staffSerializer.data},
+                    status=status.HTTP_201_CREATED,
+                )
+            else:
+                return Response(
+                    {"status": False, "data": staffSerializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            return Response(
+                {"status": False, "data": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+@api_view(["GET"])
+def getStaffData(request, id):
+    try:
+        login_id = id
+        data = User.objects.get(id=login_id)
+        if data:
+            stf = Staff.objects.get(user=data)
+            dict = {
+                "name": data.first_name + " " + data.last_name,
+                "uName": data.username,
+                "email": stf.email,
+            }
+            return JsonResponse(
+                {"status": True, "data": dict}, status=status.HTTP_200_OK
+            )
+        else:
+            return JsonResponse({"status": False}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("PUT",))
+@parser_classes((MultiPartParser, FormParser))
+def staffReg2_Action(request):
+    try:
+        login_id = request.data["Id"]
+        data = User.objects.get(id=login_id)
+        sdata = Staff.objects.get(user=data)
+
+        serializer = StaffSerializer(sdata, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"status": False, "data": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    except User.DoesNotExist:
+        return Response(
+            {"status": False, "message": "User details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Staff.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Staff details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("POST",))
+def distributorReg_Action(request):
+    if request.method == "POST":
+        if User.objects.filter(username=request.data["username"]).exists():
+            return Response(
+                {
+                    "status": False,
+                    "message": "This username already exists. Sign up again",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        elif Company.objects.filter(email=request.data["email"]).exists():
+            return Response(
+                {
+                    "status": False,
+                    "message": "This email already exists. Sign up again",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        else:
+            request.data["role"] = "Distributor"
+
+            serializer = UserSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                user = User.objects.get(id=serializer.data["id"])
+                user.set_password(request.data["password"])
+
+                code_length = 8
+                characters = string.ascii_letters + string.digits  # Letters and numbers
+
+                while True:
+                    unique_code = "".join(
+                        random.choice(characters) for _ in range(code_length)
+                    )
+                    # Check if the code already exists in the table
+                    if not Distributor.objects.filter(distributor_code=unique_code).exists():
+                        break
+
+                request.data["user"] = user.id
+                request.data["distributor_code"] = unique_code
+                request.data["admin_approval_status"] = "NULL"
+
+                distributorSerializer = DistributorSerializer(data=request.data)
+                if distributorSerializer.is_valid():
+                    distributorSerializer.save()
+                    return Response(
+                        {"status": True, "data": distributorSerializer.data},
+                        status=status.HTTP_201_CREATED,
+                    )
+                else:
+                    return Response(
+                        {"status": False, "data": distributorSerializer.errors},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            else:
+                return Response(
+                    {"status": False, "data": serializer.errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+
+@api_view(["GET"])
+def getDistributorData(request, id):
+    try:
+        login_id = id
+        data = User.objects.get(id=login_id)
+        if data:
+            distr = Distributor.objects.get(user=data)
+            dict = {
+                "fName": data.first_name,
+                "lName": data.last_name,
+                "uName": data.username,
+                "email": distr.email,
+            }
+            return JsonResponse(
+                {"status": True, "data": dict}, status=status.HTTP_200_OK
+            )
+        else:
+            return JsonResponse({"status": False}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("PUT",))
+@parser_classes((MultiPartParser, FormParser))
+def distributorReg2_Action2(request):
+    try:
+        login_id = request.data["Id"]
+        data = User.objects.get(id=login_id)
+        ddata = Distributor.objects.get(user=data)
+
+        serializer = DistributorSerializer(ddata, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+
+            # Update the company with trial period dates
+            payment_term = request.data["payment_term"]
+            terms = PaymentTerms.objects.get(id=payment_term)
+
+            start_date = date.today()
+            days = int(terms.days)
+            end = date.today() + timedelta(days=days)
+
+            ddata.start_date = start_date
+            ddata.end_date = end
+            ddata.save()
+
+            return Response(
+                {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"status": False, "data": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    except User.DoesNotExist:
+        return Response(
+            {"status": False, "message": "User details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Distributor.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Distributor details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("GET",))
+def getClients(request):
+    try:
+        data = Company.objects.filter(admin_approval_status="Accept")
+        # serializer = DistributorDetailsSerializer(data, many=True)
+        requests = []
+        for i in data:
+            req = {
+                "id": i.id,
+                "name": i.user.first_name + " " + i.user.last_name,
+                "email": i.email,
+                "contact": i.contact,
+                "term": (
+                    str(i.payment_term.payment_terms_number)
+                    + " "
+                    + i.payment_term.payment_terms_value
+                    if i.payment_term
+                    else "Trial Period"
+                ),
+                "endDate": i.end_date,
+            }
+            requests.append(req)
+
+        return Response({"status": True, "data": requests})
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+    
+@api_view(("GET",))
+def getClientsRequests(request):
+    try:
+        data = Company.objects.filter(
+            registration_type="self", admin_approval_status="NULL"
+        )
+        requests = []
+        for i in data:
+            req = {
+                "id": i.id,
+                "name": i.user.first_name + " " + i.user.last_name,
+                "email": i.email,
+                "contact": i.contact,
+                "term": (
+                    str(i.payment_term.payment_terms_number)
+                    + " "
+                    + i.payment_term.payment_terms_value
+                    if i.payment_term
+                    else "Trial Period"
+                ),
+                "endDate": i.end_date,
+            }
+            requests.append(req)
+
+        return Response({"status": True, "data": requests})
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(("PUT",))
+def client_Req_Accept(request, id):
+    try:
+        data = Company.objects.get(id=id)
+        data.admin_approval_status = "Accept"
+        data.save()
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Company.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Client details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("DELETE",))
+def client_Req_Reject(request, id):
+    try:
+        data = Company.objects.get(id=id)
+        data.user.delete()
+        data.delete()
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Company.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Client details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(("GET",))
+def getDistributorsRequests(request):
+    try:
+        data = Distributor.objects.filter(admin_approval_status="NULL")
+        requests = []
+        for i in data:
+            req = {
+                "id": i.id,
+                "name": i.user.first_name + " " + i.user.last_name,
+                "email": i.email,
+                "contact": i.contact,
+                "term": (
+                    str(i.payment_term.payment_terms_number)
+                    + " "
+                    + i.payment_term.payment_terms_value
+                    if i.payment_term
+                    else ""
+                ),
+                "endDate": i.end_date,
+            }
+            requests.append(req)
+        return Response({"status": True, "data": requests})
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("GET",))
+def getDistributors(request):
+    try:
+        data = Distributor.objects.filter(admin_approval_status="Accept")
+        requests = []
+        for i in data:
+            req = {
+                "id": i.id,
+                "name": i.user.first_name + " " + i.user.last_name,
+                "email": i.email,
+                "contact": i.contact,
+                "term": (
+                    str(i.payment_term.payment_terms_number)
+                    + " "
+                    + i.payment_term.payment_terms_value
+                    if i.payment_term
+                    else ""
+                ),
+                "endDate": i.end_date,
+            }
+            requests.append(req)
+
+        return Response({"status": True, "data": requests})
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("PUT",))
+def distributorReq_Accept(request, id):
+    try:
+        data = Distributor.objects.get(id=id)
+        data.admin_approval_status = "Accept"
+        data.save()
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Distributor.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Distributor details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("DELETE",))
+def distributorReq_Reject(request, id):
+    try:
+        data = Distributor.objects.get(id=id)
+        data.user.delete()
+        data.delete()
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Distributor.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Distributor details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
         return Response(
             {"status": False, "message": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,

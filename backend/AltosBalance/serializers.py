@@ -41,8 +41,3 @@ class ModulesListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Modules_List
         fields = '__all__'
-
-class PaymentTermsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PaymentTerms
-        fields = '__all__'

@@ -80,15 +80,19 @@ function Index() {
                     style={{ display: dropdownVisible ? "block" : "none" }}
                   >
                     <li>
-                      <Link to="/login">Distributor Registration</Link>
+                      <a onClick={() => navigate("/distributor_registration")}>
+                        Distributor Registration
+                      </a>
                     </li>
                     <li>
-                      <a onClick={()=>navigate("/company_registration")}>
+                      <a onClick={() => navigate("/company_registration")}>
                         Company Registration
                       </a>
                     </li>
                     <li>
-                      <Link to="/staff_registration">Staff Registration</Link>
+                      <a onClick={() => navigate("/staff_registration")}>
+                        Staff Registration
+                      </a>
                     </li>
                   </ul>
                 </li>

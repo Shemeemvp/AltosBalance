@@ -125,7 +125,7 @@ function Modules() {
             icon: "success",
             title: "Registered successfully",
           });
-          navigate("/login");
+          navigate("/");
         }
       })
       .catch((err) => {
