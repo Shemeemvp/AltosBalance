@@ -18,6 +18,7 @@ urlpatterns = [
     path('get_distributor_data/<int:id>/',getDistributorData),
     path('Distributor_Registration_Action2/',distributorReg2_Action2),
 
+    # Admin
     path('get_clients/',getClients),
     path('get_clients_requests/',getClientsRequests),
     path('Client_Req_Accept/<int:id>/',client_Req_Accept),
@@ -26,5 +27,13 @@ urlpatterns = [
     path('get_distributors/',getDistributors),
     path('DReq_Accept/<int:id>/',distributorReq_Accept),
     path('DReq_Reject/<int:id>/',distributorReq_Reject),
+    path('get_distributors_overview_data/<int:id>/',getDistributorsOverviewData),
+    path('get_clients_overview_data/<int:id>/',getClientsOverviewData),
+
+    # Distributor
+    path('get_distributor_clients_requests/<int:id>/',distributorClientRequest),
+    path('get_distributor_clients/<int:id>/',distributorClients),
+    path('DClient_Req_Accept/<int:id>/',distributorClient_Req_Accept),
+    path('DClient_Req_Reject/<int:id>/',distributorClient_Req_Reject),
 
 ]

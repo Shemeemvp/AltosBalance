@@ -235,3 +235,8 @@ class Stock_Reason(models.Model):
     company = models.ForeignKey(Company,on_delete=models.CASCADE,null=True,blank=True)
     user = models.ForeignKey(User,on_delete=models.CASCADE,null=True,blank=True)
     reason = models.CharField(max_length=500)
+
+class Payment_Terms_updation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE,null=True,blank=True)
+    payment_term = models.ForeignKey(PaymentTerms, on_delete=models.CASCADE,null=True,blank=True)
+    status = models.CharField(max_length=100,null=True,default='New') 

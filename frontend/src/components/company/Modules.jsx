@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 function Modules() {
-    const ID = Cookies.get("user_id");
+  const ID = Cookies.get("user_id");
   const [formData, setFormData] = useState({
     c1: null,
     c2: null,
@@ -154,7 +154,11 @@ function Modules() {
     <>
       <div
         className="modules-body-wrapper"
-        style={{ padding: "30px 120px 120px 120px",backgroundColor: "#cdcdcd9e", minHeight: "100vh" }}
+        style={{
+          padding: "30px 120px 120px 120px",
+          backgroundColor: "#cdcdcd9e",
+          minHeight: "100vh",
+        }}
       >
         <div className="modules-container">
           <form

@@ -17,6 +17,14 @@ import ClientsReq from "./components/admin/ClientsReq";
 import Distributors from "./components/admin/Distributors";
 import AllDistributors from "./components/admin/AllDistributors";
 import DistributorsReq from "./components/admin/DistributorsReq";
+import DistributorReqOverview from "./components/admin/DistributorReqOverview";
+import ClientReqOverview from "./components/admin/ClientReqOverview";
+import AllDistributorsOverview from "./components/admin/AllDistributorsOverview";
+import AllClientsOverview from "./components/admin/AllClientsOverview";
+import DistributorPrivateRoutes from "./components/routes/DistributorPrivateRoutes";
+import DistributorHome from "./components/distributor/DistributorHome";
+import DAllClients from "./components/distributor/DAllClients";
+import DClientReq from "./components/distributor/DClientReq";
 
 function App() {
   return (
@@ -43,10 +51,25 @@ function App() {
             <Route path="/clients" element={<Clients />}></Route>
             <Route path="/all_clients" element={<AllClients />}></Route>
             <Route path="/clients_requests" element={<ClientsReq />}></Route>
+            <Route path="/client_request_overview/:id/" element={<ClientReqOverview />}></Route>
+            <Route path="/all_clients_overview/:id/" element={<AllClientsOverview />}></Route>
             <Route path="/distributors" element={<Distributors />}></Route>
             <Route path="/all_distributors" element={<AllDistributors />}></Route>
             <Route path="/distributors_requests" element={<DistributorsReq />}></Route>
+            <Route path="/distributors_request_overview/:id/" element={<DistributorReqOverview />}></Route>
+            <Route path="/all_distributors_overview/:id/" element={<AllDistributorsOverview />}></Route>
 
+          </Route>
+          <Route element={<DistributorPrivateRoutes />}>
+            <Route path="/distributor_home" element={<DistributorHome />}></Route>
+            {/* <Route path="/distributor_notifications" element={<DistNotifications />}></Route> */}
+            {/* <Route path="/distributor_profile" element={<DistributorProfile />}></Route> */}
+            {/* <Route path="/edit_distributor_profile" element={<DistributorProfileEdit />}></Route> */}
+            <Route path="/DClient_req" element={<DClientReq />}></Route>
+            <Route path="/DClients" element={<DAllClients />}></Route>
+            {/* <Route path="/DClient_request_overview/:id/" element={<DClientReqOverview />}></Route> */}
+            {/* <Route path="/DClient_overview/:id/" element={<DClientOverview />}></Route> */}
+            {/* <Route path="/dnotification_overview/:id/" element={<DistNotificationOverview />}></Route> */}
           </Route>
         </Routes>
       </BrowserRouter>

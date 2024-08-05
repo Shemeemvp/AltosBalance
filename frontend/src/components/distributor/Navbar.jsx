@@ -1,12 +1,14 @@
 import React from "react";
 import { Dropdown } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Trans } from "react-i18next";
-import './styles/Navbar.css'
-import 'bootstrap/dist/css/bootstrap.css';
-import logo from '../../assets/images/logo.svg'
+import "./styles/Navbar.css";
+import "bootstrap/dist/css/bootstrap.css";
+import Cookies from "js-cookie";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+
   const toggleOffcanvas = () => {
     document.querySelector(".sidebar-offcanvas").classList.toggle("active");
   };
@@ -15,15 +17,25 @@ const Navbar = () => {
     document.querySelector(".right-sidebar").classList.toggle("open");
   };
 
+  function handleLogout() {
+    Cookies.remove("role");
+    Cookies.remove("user_id");
+    Cookies.remove("access");
+    Cookies.remove("refresh");
+    navigate("/");
+  }
+
   return (
     <nav className="admin-nav navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row justify-content-between">
       <div className="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
         <Link className="navbar-brand brand-logo pl-4 d-lg-block d-none" to="/">
           {/* <img src={logo} alt="logo" /> */}
           <h2 className="text-muted">AltosBalance</h2>
-
         </Link>
-        <Link className="navbar-brand brand-logo-mini d-block d-lg-none pl-4" to="/">
+        <Link
+          className="navbar-brand brand-logo-mini d-block d-lg-none pl-4"
+          to="/"
+        >
           {/* <img src={require("../../assets/images/logo-mini.svg")} alt="logo" /> */}
           <h2 className="text-muted">AB</h2>
         </Link>
@@ -52,10 +64,10 @@ const Navbar = () => {
             </form>
           </div>
         </div>
-        <div className="right">
+        <div className="right pr-5">
           <ul className="navbar-nav navbar-nav-right d-flex flex-row">
             <li className="nav-item ml-2">
-            <Dropdown alignRight>
+              <Dropdown alignRight>
                 <Dropdown.Toggle className="nav-link count-indicator navDropButtons">
                   <i className="mdi mdi-bell-outline"></i>
                   <span className="count-symbol bg-danger"></span>
@@ -72,12 +84,12 @@ const Navbar = () => {
                     <div className="preview-item-content d-flex align-items-start flex-column justify-content-center">
                       <div className="notification_head d-flex align-items-center justify-content-between">
                         <h6 className="preview-subject font-weight-normal mb-1">
-                          <Trans>Launch Admin</Trans>
+                          <Trans>Launch Distributor</Trans>
                         </h6>
                         <span className="ml-5">31-07-2024</span>
                       </div>
                       <p className="text-gray ellipsis mb-0">
-                        <Trans>New admin wow</Trans>!
+                        <Trans>New Distributor wow</Trans>!
                       </p>
                     </div>
                   </Dropdown.Item>
@@ -88,50 +100,32 @@ const Navbar = () => {
                 </Dropdown.Menu>
               </Dropdown>
             </li>
-            {/* <li className="nav-item nav-logout d-none d-lg-block">
-              <a
-                className="nav-link"
-                href="!#"
-                onClick={(event) => event.preventDefault()}
-              >
-                <i className="mdi mdi-power"></i>
-              </a>
-            </li> */}
-            <li className="nav-item nav-profile ml-2 mr-2">
+            <li className="nav-item nav-profile ml-5 mr-2">
               <Dropdown alignRight>
                 <Dropdown.Toggle className="nav-link d-flex align-items-center navDropButtons">
                   <div className="nav-profile-img">
                     <img
-                      src={require("../../assets/images/faces/face1.jpg")}
+                      src={require("../../assets/images/faces/user-1.jpg")}
                       alt="user"
                     />
                     <span className="availability-status online"></span>
                   </div>
                   <div className="nav-profile-text">
                     <p className="mb-1 text-grey font-weight-bold">
-                      <Trans>David Greymaax</Trans>
+                      <Trans>Distributor</Trans>
                     </p>
                   </div>
                 </Dropdown.Toggle>
                 <Dropdown.Menu className="navbar-dropdown">
-                  <Dropdown.Item
-                    href="!#"
-                    onClick={(evt) => evt.preventDefault()}
-                  >
+                  <Dropdown.Item onClick={() => navigate("/distributor_home")}>
                     <i className="mdi mdi-account mr-2 text-success"></i>
                     <Trans>Profile</Trans>
                   </Dropdown.Item>
-                  <Dropdown.Item
-                    href="!#"
-                    onClick={(evt) => evt.preventDefault()}
-                  >
+                  <Dropdown.Item onClick={() => navigate("/distributor_home")}>
                     <i className="mdi mdi-home mr-2 text-secondary"></i>
                     <Trans>Dashboard</Trans>
                   </Dropdown.Item>
-                  <Dropdown.Item
-                    href="!#"
-                    onClick={(evt) => evt.preventDefault()}
-                  >
+                  <Dropdown.Item onClick={handleLogout}>
                     <i className="mdi mdi-logout mr-2 text-danger"></i>
                     <Trans>Logout</Trans>
                   </Dropdown.Item>

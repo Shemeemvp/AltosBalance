@@ -45,158 +45,146 @@ def Login(request):
 
         if log_user is not None:
             auth.login(request, log_user)
+            user = User.objects.get(username=user_name)
 
+            refresh = RefreshToken.for_user(user)
             # ---super admin---
-
-            if request.user.is_staff == 1:
-                refresh = RefreshToken.for_user(log_user)
+            if user.is_staff == 1:
                 return Response(
                     {
                         "status": True,
                         "redirect": "admin_home",
-                        "user": str(log_user.id),
+                        "user": str(user.id),
                         "refresh": str(refresh),
                         "access": str(refresh.access_token),
                         "role": "Admin",
                     },
                     status=status.HTTP_200_OK,
                 )
+            # -------distributor ------
+            elif user.role == "Distributor":
+                did = Distributor.objects.get(user=user)
+                if did.admin_approval_status == "Accept":
+                    current_day = date.today()
+                    if current_day > did.end_date:
+                        if not Payment_Terms_updation.objects.filter(
+                            user=user, status="New"
+                        ).exists():
+                            return Response(
+                                {
+                                    "status": False,
+                                    "redirect": "wrong",
+                                    "user": str(user.id),
+                                    "message": "Terms Expired",
+                                }
+                            )
+                        else:
+                            return Response(
+                                {
+                                    "status": False,
+                                    "redirect": "distributor_registration",
+                                    "user": str(user.id),
+                                    "message": "Term Updation Request is pending..",
+                                }
+                            )
+                    else:
+                        return Response(
+                            {
+                                "status": True,
+                                "redirect": "distributor_home",
+                                "refresh": str(refresh),
+                                "access": str(refresh.access_token),
+                                "role": "Distributor",
+                                "user": str(user.id),
+                            },
+                            status=status.HTTP_200_OK,
+                        )
 
-        # -------distributor ------
+                else:
+                    return Response(
+                        {"status": False, "message": "Approval is Pending"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+            # Company
+            elif user.role == "Company":
+                cid = Company.objects.get(user=user)
+                if (
+                    cid.admin_approval_status == "Accept"
+                    or cid.distributor_approval_status == "Accept"
+                ):
+                    current_day = date.today()
+                    if current_day > cid.end_date:
+                        if not Payment_Terms_updation.objects.filter(
+                            user=user, status="New"
+                        ).exists():
+                            return Response(
+                                {
+                                    "status": False,
+                                    "user": str(user.id),
+                                    "redirect": "wrong",
+                                    "message": "Terms Expired",
+                                }
+                            )
+                        else:
+                            return Response(
+                                {
+                                    "status": False,
+                                    "user": str(user.id),
+                                    "redirect": "company_registration",
+                                    "message": "Term Updation Request is pending..",
+                                }
+                            )
 
-        # if User.objects.filter(
-        #     username=user_name, password=passw
-        # ).exists():
-        #     data = User.objects.get(username=user_name, password=passw)
-        #     if data.User_Type == "Distributor":
-        #         did = Distributor.objects.get(Login_Id=data.id)
-        #         if did.Admin_approval_status == "Accept":
-        #             request.session["s_id"] = data.id
-        #             current_day = date.today()
-        #             if current_day > did.End_date:
-        #                 print("wrong")
+                    else:
+                        return Response(
+                            {
+                                "status": True,
+                                "redirect": "company_home",
+                                "role": "Company",
+                                "refresh": str(refresh),
+                                "access": str(refresh.access_token),
+                                "user": str(user.id),
+                            },
+                            status=status.HTTP_200_OK,
+                        )
+                else:
+                    return Response(
+                        {"status": False, "message": "Approval is Pending"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
+            # Staff
+            elif user.role == "Staff":
+                cid = Staff.objects.get(user=user)
+                if cid.company_approval_status == "Accept":
+                    com = cid.company
 
-        #                 if not Fin_Payment_Terms_updation.objects.filter(
-        #                     Login_Id=data, status="New"
-        #                 ).exists():
-        #                     return Response(
-        #                         {
-        #                             "status": False,
-        #                             "redirect": "wrong",
-        #                             "Login_id": data.id,
-        #                             "message": "Terms Expired",
-        #                         }
-        #                     )
-        #                 else:
-        #                     return Response(
-        #                         {
-        #                             "status": False,
-        #                             "redirect": "distributor_registration",
-        #                             "Login_id": data.id,
-        #                             "message": "Term Updation Request is pending..",
-        #                         }
-        #                     )
-        #             else:
-        #                 return Response(
-        #                     {
-        #                         "status": True,
-        #                         "redirect": "distributor_home",
-        #                         "user": "Distributor",
-        #                         "Login_id": data.id,
-        #                     },
-        #                     status=status.HTTP_200_OK,
-        #                 )
-
-        #         else:
-        #             return Response(
-        #                 {"status": False, "message": "Approval is Pending"},
-        #                 status=status.HTTP_404_NOT_FOUND,
-        #             )
-
-        #     if data.User_Type == "Company":
-        #         cid = Company.objects.get(Login_Id=data.id)
-        #         if (
-        #             cid.Admin_approval_status == "Accept"
-        #             or cid.Distributor_approval_status == "Accept"
-        #         ):
-        #             request.session["s_id"] = data.id
-
-        #             com = Company.objects.get(Login_Id=data.id)
-
-        #             current_day = date.today()
-        #             if current_day > com.End_date:
-        #                 print("wrong")
-
-        #                 if not Fin_Payment_Terms_updation.objects.filter(
-        #                     Login_Id=data, status="New"
-        #                 ).exists():
-        #                     return Response(
-        #                         {
-        #                             "status": False,
-        #                             "Login_id": data.id,
-        #                             "redirect": "wrong",
-        #                             "message": "Terms Expired",
-        #                         }
-        #                     )
-        #                 else:
-        #                     return Response(
-        #                         {
-        #                             "status": False,
-        #                             "Login_id": data.id,
-        #                             "redirect": "company_registration",
-        #                             "message": "Term Updation Request is pending..",
-        #                         }
-        #                     )
-
-        #             else:
-        #                 return Response(
-        #                     {
-        #                         "status": True,
-        #                         "redirect": "company_home",
-        #                         "user": "Company",
-        #                         "Login_id": data.id,
-        #                     },
-        #                     status=status.HTTP_200_OK,
-        #                 )
-        #         else:
-        #             return Response(
-        #                 {"status": False, "message": "Approval is Pending"},
-        #                 status=status.HTTP_404_NOT_FOUND,
-        #             )
-
-        #     if data.User_Type == "Staff":
-        #         cid = Staff.objects.get(Login_Id=data.id)
-        #         if cid.Company_approval_status == "Accept":
-        #             request.session["s_id"] = data.id
-        #             com = Staff.objects.get(Login_Id=data.id)
-
-        #             current_day = date.today()
-        #             if current_day > com.company_id.End_date:
-        #                 print("wrong")
-        #                 return Response(
-        #                     {
-        #                         "status": False,
-        #                         "Login_id": data.id,
-        #                         "redirect": "staff_registration",
-        #                         "message": "Your account is temporarily blocked",
-        #                     }
-        #                 )
-        #             else:
-        #                 return Response(
-        #                     {
-        #                         "status": True,
-        #                         "redirect": "company_home",
-        #                         "user": "Staff",
-        #                         "Login_id": data.id,
-        #                     },
-        #                     status=status.HTTP_200_OK,
-        #                 )
-        #         else:
-        #             return Response(
-        #                 {"status": False, "message": "Approval is Pending"},
-        #                 status=status.HTTP_404_NOT_FOUND,
-        #             )
-
+                    current_day = date.today()
+                    if current_day > com.end_date:
+                        return Response(
+                            {
+                                "status": False,
+                                "user": str(user.id),
+                                "redirect": "staff_registration",
+                                "message": "Your account is temporarily blocked",
+                            }
+                        )
+                    else:
+                        return Response(
+                            {
+                                "status": True,
+                                "redirect": "company_home",
+                                "role": "Staff",
+                                "refresh": str(refresh),
+                                "access": str(refresh.access_token),
+                                "user": str(user.id),
+                            },
+                            status=status.HTTP_200_OK,
+                        )
+                else:
+                    return Response(
+                        {"status": False, "message": "Approval is Pending"},
+                        status=status.HTTP_404_NOT_FOUND,
+                    )
         else:
             return Response(
                 {"status": False, "message": "Invalid username or password, try again"},
@@ -403,7 +391,7 @@ def addModules(request):
         data = User.objects.get(id=login_id)
         com = Company.objects.get(user=data.id)
 
-        request.data["company_id"] = com.id
+        request.data["company"] = com.id
 
         serializer = ModulesListSerializer(data=request.data)
         if serializer.is_valid():
@@ -2051,6 +2039,7 @@ def distributorReg_Action(request):
                 serializer.save()
                 user = User.objects.get(id=serializer.data["id"])
                 user.set_password(request.data["password"])
+                user.save()
 
                 code_length = 8
                 characters = string.ascii_letters + string.digits  # Letters and numbers
@@ -2060,7 +2049,9 @@ def distributorReg_Action(request):
                         random.choice(characters) for _ in range(code_length)
                     )
                     # Check if the code already exists in the table
-                    if not Distributor.objects.filter(distributor_code=unique_code).exists():
+                    if not Distributor.objects.filter(
+                        distributor_code=unique_code
+                    ).exists():
                         break
 
                 request.data["user"] = user.id
@@ -2191,7 +2182,8 @@ def getClients(request):
             {"status": False, "message": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-    
+
+
 @api_view(("GET",))
 def getClientsRequests(request):
     try:
@@ -2223,6 +2215,7 @@ def getClientsRequests(request):
             {"status": False, "message": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
 
 @api_view(("PUT",))
 def client_Req_Accept(request, id):
@@ -2262,6 +2255,7 @@ def client_Req_Reject(request, id):
             {"status": False, "message": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
 
 @api_view(("GET",))
 def getDistributorsRequests(request):
@@ -2354,6 +2348,194 @@ def distributorReq_Reject(request, id):
     except Distributor.DoesNotExist:
         return Response(
             {"status": False, "message": "Distributor details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("GET",))
+def getDistributorsOverviewData(request, id):
+    try:
+        data = Distributor.objects.get(id=id)
+        # serializer = DistributorDetailsSerializer(data, many=True)
+        req = {
+            "id": data.id,
+            "name": data.user.first_name + " " + data.user.last_name,
+            "email": data.email,
+            "code": data.distributor_code,
+            "contact": data.contact,
+            "username": data.user.username,
+            "image": data.image.url if data.image else None,
+            "endDate": data.end_date,
+            "term": (
+                str(data.payment_term.payment_terms_number)
+                + " "
+                + data.payment_term.payment_terms_value
+                if data.payment_term
+                else ""
+            ),
+        }
+        return Response({"status": True, "data": req}, status=status.HTTP_200_OK)
+    except Distributor.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Distributor details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("GET",))
+def getClientsOverviewData(request, id):
+    try:
+        data = Company.objects.get(id=id)
+        modules = Modules_List.objects.get(company=data, status="New")
+        serializer = ModulesListSerializer(modules)
+        req = {
+            "id": data.id,
+            "name": data.user.first_name + " " + data.user.last_name,
+            "email": data.email,
+            "code": data.company_code,
+            "contact": data.contact,
+            "username": data.user.username,
+            "image": data.image.url if data.image else "",
+            "endDate": data.end_date,
+            "term": (
+                str(data.payment_term.payment_terms_number)
+                + " "
+                + data.payment_term.payment_terms_value
+                if data.payment_term
+                else "Trial Period"
+            ),
+        }
+        return Response(
+            {"status": True, "data": req, "modules": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+    except Company.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Client details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("GET",))
+def distributorClientRequest(request, id):
+    try:
+        data = Distributor.objects.get(user__id=id)
+        lst = Company.objects.filter(
+            registration_type="distributor",
+            distributor_approval_status="NULL",
+            distributor=data,
+        )
+        requests = []
+        for i in lst:
+            req = {
+                "id": i.id,
+                "name": i.user.first_name + " " + i.user.last_name,
+                "email": i.email,
+                "contact": i.contact,
+                "term": (
+                    str(i.payment_term.payment_terms_number)
+                    + " "
+                    + i.payment_term.payment_terms_value
+                    if i.payment_term
+                    else "Trial Period"
+                ),
+                "endDate": i.end_date,
+            }
+            requests.append(req)
+
+        return Response({"status": True, "data": requests})
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("GET",))
+def distributorClients(request, id):
+    try:
+        data = Distributor.objects.get(user__id=id)
+        lst = Company.objects.filter(
+            registration_type="distributor",
+            distributor_approval_status="Accept",
+            distributor=data,
+        )
+        requests = []
+        for i in lst:
+            req = {
+                "id": i.id,
+                "name": i.user.first_name + " " + i.user.last_name,
+                "email": i.email,
+                "contact": i.contact,
+                "term": (
+                    str(i.payment_term.payment_terms_number)
+                    + " "
+                    + i.payment_term.payment_terms_value
+                    if i.payment_term
+                    else "Trial Period"
+                ),
+                "endDate": i.end_date,
+            }
+            requests.append(req)
+
+        return Response({"status": True, "data": requests})
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("PUT",))
+def distributorClient_Req_Accept(request, id):
+    try:
+        data = Company.objects.get(id=id)
+        data.distributor_approval_status = "Accept"
+        data.save()
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Company.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Client details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("DELETE",))
+def distributorClient_Req_Reject(request, id):
+    try:
+        data = Company.objects.get(id=id)
+        data.user.delete()
+        data.delete()
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Company.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Client details not found"},
             status=status.HTTP_404_NOT_FOUND,
         )
     except Exception as e:
