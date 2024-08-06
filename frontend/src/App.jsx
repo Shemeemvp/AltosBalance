@@ -25,6 +25,8 @@ import DistributorPrivateRoutes from "./components/routes/DistributorPrivateRout
 import DistributorHome from "./components/distributor/DistributorHome";
 import DAllClients from "./components/distributor/DAllClients";
 import DClientReq from "./components/distributor/DClientReq";
+import DClientReqOverview from "./components/distributor/DClientReqOverview";
+import DClientOverview from "./components/distributor/DClientOverview";
 
 function App() {
   return (
@@ -67,8 +69,8 @@ function App() {
             {/* <Route path="/edit_distributor_profile" element={<DistributorProfileEdit />}></Route> */}
             <Route path="/DClient_req" element={<DClientReq />}></Route>
             <Route path="/DClients" element={<DAllClients />}></Route>
-            {/* <Route path="/DClient_request_overview/:id/" element={<DClientReqOverview />}></Route> */}
-            {/* <Route path="/DClient_overview/:id/" element={<DClientOverview />}></Route> */}
+            <Route path="/DClient_request_overview/:id/" element={<DClientReqOverview />}></Route>
+            <Route path="/DClient_overview/:id/" element={<DClientOverview />}></Route>
             {/* <Route path="/dnotification_overview/:id/" element={<DistNotificationOverview />}></Route> */}
           </Route>
         </Routes>

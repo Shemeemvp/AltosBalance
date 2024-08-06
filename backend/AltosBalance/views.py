@@ -2544,3 +2544,74 @@ def distributorClient_Req_Reject(request, id):
             {"status": False, "message": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+# @api_view(("GET",))
+# def checkDistributorPaymentTerms(request, id):
+#     try:
+#         s_id = id
+#         data = User.objects.get(id=s_id)
+#         com = Distributor.objects.get(Login_Id=s_id)
+#         payment_request = Payment_Terms_updation.objects.filter(
+#             user=com.user, status="New"
+#         ).exists()
+
+#         title2 = ["Modules Updated..!", "New Plan Activated..!", "Change Payment Terms"]
+#         today_date = date.today()
+#         notification = Fin_DNotification.objects.filter(
+#             status="New", Distributor_id=com, Title__in=title2, Noti_date__lt=today_date
+#         )
+#         notification.update(status="old")
+
+#         diff = (com.End_date - today_date).days
+
+#         # payment term and trial period alert notifications for notification page
+#         dis_name = com.Login_Id.First_name + "  " + com.Login_Id.Last_name
+#         if (
+#             not Fin_DNotification.objects.filter(
+#                 Login_Id=com.Login_Id,
+#                 Distributor_id=com,
+#                 Title="Payment Terms Alert",
+#                 status="New",
+#             ).exists()
+#             and diff <= 20
+#         ):
+#             n = Fin_DNotification(
+#                 Login_Id=com.Login_Id,
+#                 Distributor_id=com,
+#                 Title="Payment Terms Alert",
+#                 Discription="Your Payment Terms End Soon",
+#             )
+#             n.save()
+#             d = Fin_ANotification(
+#                 Login_Id=data.Login_Id,
+#                 Title="Payment Terms Alert",
+#                 Discription=f"Current  payment terms of {dis_name} is expiring",
+#             )
+#             d.save()
+#         noti = Fin_DNotification.objects.filter(
+#             status="New", Distributor_id=com.id
+#         ).order_by("-id", "-Noti_date")
+#         n = len(noti)
+
+#         # Calculate the date 20 days before the end date for payment term renew and 10 days before for trial period renew
+#         reminder_date = com.End_date - timedelta(days=20)
+#         current_date = date.today()
+#         alert_message = current_date >= reminder_date
+
+#         # Calculate the number of days between the reminder date and end date
+#         days_left = (com.End_date - current_date).days
+#         return Response(
+#             {
+#                 "status": True,
+#                 "alert_message": alert_message,
+#                 "endDate": com.End_date,
+#                 "days_left": days_left,
+#                 "payment_request": payment_request,
+#             },
+#             status=status.HTTP_200_OK,
+#         )
+#     except Exception as e:
+#         return Response(
+#             {"status": False, "message": str(e)},
+#             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#         )

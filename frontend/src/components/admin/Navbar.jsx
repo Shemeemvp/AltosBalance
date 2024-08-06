@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Dropdown } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { Trans } from "react-i18next";
@@ -10,9 +10,16 @@ import Cookies from "js-cookie";
 const Navbar = () => {
   const navigate = useNavigate();
 
+  const [showFullLogo, setShowFullLogo] = useState(true);
+
   const toggleOffcanvas = () => {
     document.querySelector(".sidebar-offcanvas").classList.toggle("active");
   };
+
+  function toggleSidebar(){
+    document.body.classList.toggle("sidebar-icon-only");
+    setShowFullLogo(!showFullLogo);
+  }
 
   const toggleRightSidebar = () => {
     document.querySelector(".right-sidebar").classList.toggle("open");
@@ -29,10 +36,21 @@ const Navbar = () => {
   return (
     <nav className="admin-nav navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row justify-content-between">
       <div className="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
-        <Link className="navbar-brand brand-logo pl-4 d-lg-block d-none" to="/">
-          {/* <img src={logo} alt="logo" /> */}
-          <h2 className="text-muted">AltosBalance</h2>
-        </Link>
+      {showFullLogo ? (
+          <Link
+            className="navbar-brand brand-logo pl-4 d-lg-block d-none"
+            to="/admin_home"
+          >
+            <h2 className="text-muted">AltosBalance</h2>
+          </Link>
+        ) : (
+          <Link
+            className="navbar-brand brand-logo pl-4 d-lg-block d-none"
+            to="/admin_home"
+          >
+            <h2 className="text-muted">AB</h2>
+          </Link>
+        )}
         <Link
           className="navbar-brand brand-logo-mini d-block d-lg-none pl-4"
           to="/"
@@ -46,7 +64,7 @@ const Navbar = () => {
           <button
             className="navbar-toggler navbar-toggler align-self-center  d-none d-lg-block"
             type="button"
-            onClick={() => document.body.classList.toggle("sidebar-icon-only")}
+            onClick={toggleSidebar}
           >
             <span className="mdi mdi-menu"></span>
           </button>

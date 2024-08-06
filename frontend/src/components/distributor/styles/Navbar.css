@@ -35,6 +35,9 @@
   width: 260px;
   height: 70px;
 }
+.navbar .navbar-menu-wrapper {
+  width: calc(100% - 260px);
+}
 .admin-nav.navbar.navbar-brand-wrapper :host-context(.sidebar-dark) {
   background: #18151e;
 }
@@ -42,6 +45,9 @@
   .admin-nav.navbar.navbar-brand-wrapper {
     width: 55px;
   }
+  /* .navbar .navbar-menu-wrapper {
+    width: calc(100% - 55px) !important;
+  } */
 }
 .admin-nav.navbar.navbar-brand {
   color: lighten(#0f1531, 20%);

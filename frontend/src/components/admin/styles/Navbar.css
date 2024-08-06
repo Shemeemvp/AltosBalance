@@ -35,6 +35,9 @@
   width: 260px;
   height: 70px;
 }
+.navbar .navbar-menu-wrapper {
+  width: calc(100% - 260px);
+}
 .admin-nav.navbar.navbar-brand-wrapper :host-context(.sidebar-dark) {
   background: #18151e;
 }
