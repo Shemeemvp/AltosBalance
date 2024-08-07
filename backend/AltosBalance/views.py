@@ -2545,73 +2545,203 @@ def distributorClient_Req_Reject(request, id):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-# @api_view(("GET",))
-# def checkDistributorPaymentTerms(request, id):
-#     try:
-#         s_id = id
-#         data = User.objects.get(id=s_id)
-#         com = Distributor.objects.get(Login_Id=s_id)
-#         payment_request = Payment_Terms_updation.objects.filter(
-#             user=com.user, status="New"
-#         ).exists()
+@api_view(("GET",))
+def checkDistributorPaymentTerms(request, id):
+    try:
+        s_id = id
+        data = User.objects.get(id=s_id)
+        com = Distributor.objects.get(user=data)
+        payment_request = Payment_Terms_updation.objects.filter(
+            user=data, status="New"
+        ).exists()
 
-#         title2 = ["Modules Updated..!", "New Plan Activated..!", "Change Payment Terms"]
-#         today_date = date.today()
-#         notification = Fin_DNotification.objects.filter(
-#             status="New", Distributor_id=com, Title__in=title2, Noti_date__lt=today_date
-#         )
-#         notification.update(status="old")
+        title2 = ["Modules Updated..!", "New Plan Activated..!", "Change Payment Terms"]
+        today_date = date.today()
+        notification = DNotification.objects.filter(
+            status="New", distributor=com, title__in=title2, noti_date__lt=today_date
+        )
+        notification.update(status="old")
 
-#         diff = (com.End_date - today_date).days
+        diff = (com.end_date - today_date).days
 
-#         # payment term and trial period alert notifications for notification page
-#         dis_name = com.Login_Id.First_name + "  " + com.Login_Id.Last_name
-#         if (
-#             not Fin_DNotification.objects.filter(
-#                 Login_Id=com.Login_Id,
-#                 Distributor_id=com,
-#                 Title="Payment Terms Alert",
-#                 status="New",
-#             ).exists()
-#             and diff <= 20
-#         ):
-#             n = Fin_DNotification(
-#                 Login_Id=com.Login_Id,
-#                 Distributor_id=com,
-#                 Title="Payment Terms Alert",
-#                 Discription="Your Payment Terms End Soon",
-#             )
-#             n.save()
-#             d = Fin_ANotification(
-#                 Login_Id=data.Login_Id,
-#                 Title="Payment Terms Alert",
-#                 Discription=f"Current  payment terms of {dis_name} is expiring",
-#             )
-#             d.save()
-#         noti = Fin_DNotification.objects.filter(
-#             status="New", Distributor_id=com.id
-#         ).order_by("-id", "-Noti_date")
-#         n = len(noti)
+        # payment term and trial period alert notifications for notification page
+        dis_name = com.user.first_name + "  " + com.user.last_name
+        if (
+            not DNotification.objects.filter(
+                user=data,
+                distributor=com,
+                title="Payment Terms Alert",
+                status="New",
+            ).exists()
+            and diff <= 20
+        ):
+            n = DNotification(
+                user=data,
+                distributor=com,
+                title="Payment Terms Alert",
+                description="Your Payment Terms End Soon",
+            )
+            n.save()
+            d = ANotification(
+                user=data,
+                title="Payment Terms Alert",
+                description=f"Current  payment terms of {dis_name} is expiring",
+            )
+            d.save()
+        noti = DNotification.objects.filter(
+            status="New", distributor=com
+        ).order_by("-id", "-noti_date")
+        n = len(noti)
 
-#         # Calculate the date 20 days before the end date for payment term renew and 10 days before for trial period renew
-#         reminder_date = com.End_date - timedelta(days=20)
-#         current_date = date.today()
-#         alert_message = current_date >= reminder_date
+        # Calculate the date 20 days before the end date for payment term renew and 10 days before for trial period renew
+        reminder_date = com.end_date - timedelta(days=20)
+        current_date = date.today()
+        alert_message = current_date >= reminder_date
 
-#         # Calculate the number of days between the reminder date and end date
-#         days_left = (com.End_date - current_date).days
-#         return Response(
-#             {
-#                 "status": True,
-#                 "alert_message": alert_message,
-#                 "endDate": com.End_date,
-#                 "days_left": days_left,
-#                 "payment_request": payment_request,
-#             },
-#             status=status.HTTP_200_OK,
-#         )
-#     except Exception as e:
-#         return Response(
-#             {"status": False, "message": str(e)},
-#             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#         )
+        # Calculate the number of days between the reminder date and end date
+        days_left = (com.end_date - current_date).days
+        return Response(
+            {
+                "status": True,
+                "alert_message": alert_message,
+                "endDate": com.end_date,
+                "days_left": days_left,
+                "payment_request": payment_request,
+            },
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(("GET",))
+def getDistributorProfileData(request, id):
+    try:
+        data = User.objects.get(id=id)
+        usrData = Distributor.objects.get(user=data)
+        payment_request = Payment_Terms_updation.objects.filter(
+            user=data, status="New"
+        ).exists()
+        personal = {
+            "userImage": usrData.image.url if usrData.image else False,
+            "distributorCode": usrData.distributor_code,
+            "firstName": data.first_name,
+            "lastName": data.last_name,
+            "email": usrData.email,
+            "username": data.username,
+            "userContact": usrData.contact,
+            "joinDate": usrData.start_date,
+            "paymentTerm": (
+                str(usrData.payment_term.payment_terms_number)
+                + " "
+                + usrData.payment_term.payment_terms_value
+                if usrData.payment_term
+                else ""
+            ),
+            "endDate": usrData.end_date,
+        }
+
+        return Response(
+            {
+                "status": True,
+                "personalData": personal,
+                "payment_request": payment_request,
+            },
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("POST",))
+def changeDistributorPaymentTerms(request):
+    try:
+        s_id = request.data["ID"]
+        data = User.objects.get(id=s_id)
+        com = Distributor.objects.get(user=data)
+        pt = request.data["payment_term"]
+
+        pay = PaymentTerms.objects.get(id=pt)
+
+        data1 = Payment_Terms_updation(user=data, payment_term=pay)
+        data1.save()
+
+        noti = ANotification(
+            user=data,
+            payment_terms_updation=data1,
+            title="Change Payment Terms",
+            description=com.user.first_name
+            + " "
+            + com.user.last_name
+            + " wants to subscribe a new plan",
+        )
+        noti.save()
+
+        return Response(
+            {"status": True, "message": "Request Sent.!"}, status=status.HTTP_200_OK
+        )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("PUT",))
+@parser_classes((MultiPartParser, FormParser))
+def editDistributorProfile(request):
+    try:
+        login_id = request.data["Id"]
+        data = User.objects.get(id=login_id)
+        distr = Distributor.objects.get(user=data)
+
+        logSerializer = UserSerializer(data, data=request.data)
+        serializer = DistributorSerializer(
+            distr, data=request.data, partial=True
+        )
+
+        fName = request.data['first_name']
+        lName = request.data['last_name']
+        email = request.data['email']
+
+        if fName != "":
+            data.first_name = fName
+        if lName != "":
+            data.last_name = lName
+        if email != "":
+            data.email = email
+
+        data.save()
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"status": False, "data": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    except User.DoesNotExist:
+        return Response(
+            {"status": False, "message": "User details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Distributor.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Distributor details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

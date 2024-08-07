@@ -27,6 +27,8 @@ import DAllClients from "./components/distributor/DAllClients";
 import DClientReq from "./components/distributor/DClientReq";
 import DClientReqOverview from "./components/distributor/DClientReqOverview";
 import DClientOverview from "./components/distributor/DClientOverview";
+import DistributorProfile from "./components/distributor/DistributorProfile";
+import DistributorProfileEdit from "./components/distributor/DistributorProfileEdit";
 
 function App() {
   return (
@@ -65,13 +67,13 @@ function App() {
           <Route element={<DistributorPrivateRoutes />}>
             <Route path="/distributor_home" element={<DistributorHome />}></Route>
             {/* <Route path="/distributor_notifications" element={<DistNotifications />}></Route> */}
-            {/* <Route path="/distributor_profile" element={<DistributorProfile />}></Route> */}
-            {/* <Route path="/edit_distributor_profile" element={<DistributorProfileEdit />}></Route> */}
+            {/* <Route path="/dnotification_overview/:id/" element={<DistNotificationOverview />}></Route> */}
+            <Route path="/distributor_profile" element={<DistributorProfile />}></Route>
+            <Route path="/edit_distributor_profile" element={<DistributorProfileEdit />}></Route>
             <Route path="/DClient_req" element={<DClientReq />}></Route>
             <Route path="/DClients" element={<DAllClients />}></Route>
             <Route path="/DClient_request_overview/:id/" element={<DClientReqOverview />}></Route>
             <Route path="/DClient_overview/:id/" element={<DClientOverview />}></Route>
-            {/* <Route path="/dnotification_overview/:id/" element={<DistNotificationOverview />}></Route> */}
           </Route>
         </Routes>
       </BrowserRouter>

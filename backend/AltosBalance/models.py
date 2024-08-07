@@ -239,4 +239,44 @@ class Stock_Reason(models.Model):
 class Payment_Terms_updation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE,null=True,blank=True)
     payment_term = models.ForeignKey(PaymentTerms, on_delete=models.CASCADE,null=True,blank=True)
-    status = models.CharField(max_length=100,null=True,default='New') 
+    status = models.CharField(max_length=100,null=True,default='New')
+
+class CNotification(models.Model): 
+    user = models.ForeignKey(User, on_delete=models.CASCADE,null=True,blank=True)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE,null=True,blank=True)
+    # item = models.ForeignKey(Items, on_delete = models.CASCADE, null=True, blank=True)
+    # customers = models.ForeignKey(Customers, on_delete = models.CASCADE, null=True,blank=True)
+    # vendors = models.ForeignKey(Fin_Vendors, on_delete = models.CASCADE, null=True,blank=True)
+    
+    title = models.CharField(max_length=255,null=True,blank=True)
+    description = models.CharField(max_length=255,null=True,blank=True) 
+    noti_date = models.DateTimeField(auto_now_add=True,null=True)
+    date_created = models.DateField(auto_now_add=True,null=True)
+    time=models.TimeField(auto_now_add=True,null=True)
+    status = models.CharField(max_length=100,null=True,default='New')
+
+
+class ANotification(models.Model): 
+    user = models.ForeignKey(User, on_delete=models.CASCADE,null=True,blank=True)
+    module_list = models.ForeignKey(Modules_List, on_delete=models.CASCADE,null=True,blank=True)
+    payment_terms_updation = models.ForeignKey(Payment_Terms_updation, on_delete=models.CASCADE,null=True,blank=True)
+    
+    title = models.CharField(max_length=255,null=True,blank=True)
+    description = models.CharField(max_length=255,null=True,blank=True) 
+    noti_date = models.DateTimeField(auto_now_add=True,null=True)
+    date_created = models.DateField(auto_now_add=True,null=True)
+    time=models.TimeField(auto_now_add=True,null=True)
+    status = models.CharField(max_length=100,null=True,default='New')  
+
+class DNotification(models.Model): 
+    user = models.ForeignKey(User, on_delete=models.CASCADE,null=True,blank=True)
+    distributor = models.ForeignKey(Distributor, on_delete=models.CASCADE,null=True,blank=True)
+    module_list = models.ForeignKey(Modules_List, on_delete=models.CASCADE,null=True,blank=True)
+    payment_terms_updation = models.ForeignKey(Payment_Terms_updation, on_delete=models.CASCADE,null=True,blank=True)
+    
+    title = models.CharField(max_length=255,null=True,blank=True)
+    description = models.CharField(max_length=255,null=True,blank=True) 
+    noti_date = models.DateTimeField(auto_now_add=True,null=True)
+    date_created = models.DateField(auto_now_add=True,null=True)
+    time=models.TimeField(auto_now_add=True,null=True)
+    status = models.CharField(max_length=100,null=True,default='New')

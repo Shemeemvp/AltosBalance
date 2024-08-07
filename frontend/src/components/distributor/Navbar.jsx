@@ -135,7 +135,7 @@ const Navbar = () => {
                   </div>
                 </Dropdown.Toggle>
                 <Dropdown.Menu className="navbar-dropdown">
-                  <Dropdown.Item onClick={() => navigate("/distributor_home")}>
+                  <Dropdown.Item onClick={() => navigate("/distributor_profile")}>
                     <i className="mdi mdi-account mr-2 text-success"></i>
                     <Trans>Profile</Trans>
                   </Dropdown.Item>

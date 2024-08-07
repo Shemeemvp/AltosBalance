@@ -35,6 +35,9 @@ urlpatterns = [
     path('get_distributor_clients/<int:id>/',distributorClients),
     path('DClient_Req_Accept/<int:id>/',distributorClient_Req_Accept),
     path('DClient_Req_Reject/<int:id>/',distributorClient_Req_Reject),
-    # path('check_distributor_payment_term/<int:id>/',checkDistributorPaymentTerms),
+    path('check_distributor_payment_term/<int:id>/',checkDistributorPaymentTerms),
 
+    path('get_distributor_profile_data/<int:id>/',getDistributorProfileData),
+    path('Change_distributor_payment_terms/',changeDistributorPaymentTerms),
+    path('edit_distributor_profile/',editDistributorProfile),
 ]

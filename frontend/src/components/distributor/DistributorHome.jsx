@@ -21,6 +21,7 @@ function DistributorHome() {
       .get(`${config.base_url}/check_distributor_payment_term/${ID}/`)
       .then((res) => {
         if (res.data.status) {
+          console.log(res.data)
           const pData = {
             PaymentRequest: res.data.payment_request,
             daysLeft: res.data.days_left,
@@ -32,6 +33,7 @@ function DistributorHome() {
         }
       })
       .catch((err) => {
+        console.log(err)
       });
   }
 
@@ -46,7 +48,7 @@ function DistributorHome() {
   }
 
   useEffect(() => {
-    // fetchPaymentDetails();
+    fetchPaymentDetails();
   }, []);
 
   return (
@@ -113,8 +115,8 @@ function DistributorHome() {
               <button
                 style={{ visibility: "hidden" }}
                 id="modalBtn"
-                data-bs-toggle="modal"
-                data-bs-target="#myModal"
+                data-toggle="modal"
+                data-target="#myModal"
               ></button>
             </div>
             {!paymentDetails.PaymentRequest &&
@@ -130,7 +132,7 @@ function DistributorHome() {
                       <div
                         className="modal-content"
                         style={{
-                          backgroundColor: "#213b52",
+                          backgroundColor: "rgb(209 209 209)",
                           border: "1px solid rgba(255, 255, 255, 0.3)",
                         }}
                       >
@@ -139,7 +141,7 @@ function DistributorHome() {
                             className="modal-title"
                             id="exampleModalLongTitle"
                           >
-                            <i className="fas fa-exclamation-triangle fa-lg text-danger ms-1"></i>
+                            <i className="fa fa-exclamation-triangle fa-lg text-danger ms-1"></i>
                             <span className="font-monospace">
                               Payment Term Ends
                               {paymentDetails.daysLeft != 0 ? (
@@ -154,7 +156,7 @@ function DistributorHome() {
                           <button
                             type="button"
                             className="close"
-                            data-bs-dismiss="modal"
+                            data-dismiss="modal"
                             aria-label="Close"
                           >
                             <span aria-hidden="true">&times;</span>
@@ -169,7 +171,7 @@ function DistributorHome() {
                           <div className="row mb-3 mt-3 w-100 d-flex justify-content-center">
                             <button
                               className="btn btn-sm btn-success"
-                              data-bs-dismiss="modal"
+                              data-dismiss="modal"
                               onClick={() => navigate("/distributor_profile")}
                             >
                               <small>click to renew</small>
