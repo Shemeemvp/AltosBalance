@@ -174,8 +174,8 @@ function PaymentTerms() {
                         </div>
                         <input
                           type="submit"
-                          className="btn btn-outline-info rounded-pill  text-grey mt-5 mb-4"
-                          style={{ width: "20%" }}
+                          className="btn btn-outline-secondary text-grey px-5 mt-5 mb-4"
+                          style={{ width: "fit-content", height:"fit-content" }}
                         />
                       </form>
                     </div>

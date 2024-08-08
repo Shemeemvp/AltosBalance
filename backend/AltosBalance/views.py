@@ -82,7 +82,7 @@ def Login(request):
                             return Response(
                                 {
                                     "status": False,
-                                    "redirect": "distributor_registration",
+                                    "redirect": "login",
                                     "user": str(user.id),
                                     "message": "Term Updation Request is pending..",
                                 }
@@ -130,7 +130,7 @@ def Login(request):
                                 {
                                     "status": False,
                                     "user": str(user.id),
-                                    "redirect": "company_registration",
+                                    "redirect": "login",
                                     "message": "Term Updation Request is pending..",
                                 }
                             )
@@ -164,7 +164,7 @@ def Login(request):
                             {
                                 "status": False,
                                 "user": str(user.id),
-                                "redirect": "staff_registration",
+                                "redirect": "login",
                                 "message": "Your account is temporarily blocked",
                             }
                         )
@@ -387,7 +387,7 @@ def companyReg2_action2(request):
 @api_view(("POST",))
 def addModules(request):
     try:
-        login_id = request.data["Login_Id"]
+        login_id = request.data["user"]
         data = User.objects.get(id=login_id)
         com = Company.objects.get(user=data.id)
 
@@ -2433,6 +2433,230 @@ def getClientsOverviewData(request, id):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
+@api_view(("GET",))
+def fetchAdminNotifications(request):
+    try:
+        noti = ANotification.objects.filter(status="New").order_by(
+            "-id", "-noti_date"
+        )
+        serializer = ANotificationsSerializer(noti, many=True)
+        return Response(
+            {"status": True, "notifications": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+    
+
+@api_view(("GET",))
+def getAdminNotificationOverview(request, id):
+    try:
+        data = ANotification.objects.get(id=id)
+        if data.user.role == "Company":
+            com = Company.objects.get(user=data.user)
+            modules = Modules_List.objects.get(company=com, status="New")
+            serializer = ModulesListSerializer(modules)
+            req = {
+                "id": data.id,
+                "user": "Company",
+                "name": com.company_name,
+                "email": com.email,
+                "code": com.company_code,
+                "contact": com.contact,
+                "username": com.user.username,
+                "image": com.image.url if com.image else "",
+                "endDate": com.end_date,
+                "termUpdation": True if data.payment_terms_updation else False,
+                "moduleUpdation": True if data.module_list else False,
+                "term": (
+                    str(com.payment_term.payment_terms_number)
+                    + " "
+                    + com.payment_term.payment_terms_value
+                    if com.payment_term
+                    else "Trial Period"
+                ),
+                "newTerm": (
+                    str(data.payment_terms_updation.payment_term.payment_terms_number)
+                    + " "
+                    + data.payment_terms_updation.payment_term.payment_terms_value
+                    if data.payment_terms_updation
+                    else ""
+                ),
+            }
+            if data.module_list:
+                modules_pending = Modules_List.objects.filter(
+                    user=data.user, status="pending"
+                )
+                current_modules = Modules_List.objects.filter(
+                    user=data.user, status="New"
+                )
+
+                print('modules_pending',modules_pending)
+                print('current_modules',current_modules)
+
+                # Extract the field names related to modules
+                module_fields = [
+                    field.name
+                    for field in Modules_List._meta.fields
+                    if field.name
+                    not in [
+                        "id",
+                        "company",
+                        "status",
+                        "update_action",
+                        "company",
+                        "user",
+                    ]
+                ]
+
+                # Get the previous and new values for the selected modules
+                previous_values = current_modules.values(*module_fields).first()
+                new_values = modules_pending.values(*module_fields).first()
+
+                # Iterate through the dictionary and replace None with 0
+                for key, value in previous_values.items():
+                    if value is None:
+                        previous_values[key] = 0
+
+                # Iterate through the dictionary and replace None with 0
+                for key, value in new_values.items():
+                    if value is None:
+                        new_values[key] = 0
+
+                # Identify added and deducted modules
+                added_modules = {}
+                deducted_modules = {}
+
+                for field in module_fields:
+                    if new_values[field] > previous_values[field]:
+                        added_modules[field] = (
+                            new_values[field] - previous_values[field]
+                        )
+                    elif new_values[field] < previous_values[field]:
+                        deducted_modules[field] = (
+                            previous_values[field] - new_values[field]
+                        )
+
+                return Response(
+                    {
+                        "status": True,
+                        "data": req,
+                        "modules": serializer.data,
+                        "added_modules": added_modules,
+                        "deducted_modules": deducted_modules,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {"status": True, "data": req}, status=status.HTTP_200_OK
+                )
+        else:
+            com = Distributor.objects.get(user=data.user)
+            print('com-',com)
+            req = {
+                "id": data.id,
+                "user": "Distributor",
+                "name": com.user.first_name + " " + com.user.last_name,
+                "email": com.email,
+                "code": com.distributor_code,
+                "contact": com.contact,
+                "username": com.user.username,
+                "image": com.image.url if com.image else "",
+                "endDate": com.end_date,
+                "termUpdation": True if data.payment_terms_updation else False,
+                "moduleUpdation": False,
+                "term": (
+                    str(com.payment_term.payment_terms_number)
+                    + " "
+                    + com.payment_term.payment_terms_value
+                    if com.payment_term
+                    else "Trial Period"
+                ),
+                "newTerm": (
+                    str(data.payment_terms_updation.payment_term.payment_terms_number)
+                    + " "
+                    + data.payment_terms_updation.payment_term.payment_terms_value
+                    if data.payment_terms_updation
+                    else ""
+                ),
+            }
+            return Response({"status": True, "data": req}, status=status.HTTP_200_OK)
+    except Company.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Company not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Distributor.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Distributor not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("POST",))
+def module_Updation_Accept(request):
+    try:
+        id = request.data["id"]
+        data = ANotification.objects.get(id=id)
+        allmodules = Modules_List.objects.get(user=data.user, status="New")
+        allmodules.delete()
+
+        allmodules1 = Modules_List.objects.get(
+            user=data.user, status="pending"
+        )
+        allmodules1.status = "New"
+        allmodules1.save()
+
+        data.status = "old"
+        data.save()
+
+        # notification
+        CNotification.objects.create(
+            user=allmodules1.user,
+            company=allmodules1.company,
+            title="Modules Updated..!",
+            description="Your module update request is approved",
+        )
+
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("DELETE",))
+def module_Updation_Reject(request):
+    try:
+        id = request.data["id"]
+        data = ANotification.objects.get(id=id)
+        allmodules = Modules_List.objects.get(
+            user=data.user, status="pending"
+        )
+        allmodules.delete()
+
+        data.delete()
+
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
 
 @api_view(("GET",))
 def distributorClientRequest(request, id):
@@ -2545,6 +2769,7 @@ def distributorClient_Req_Reject(request, id):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
+
 @api_view(("GET",))
 def checkDistributorPaymentTerms(request, id):
     try:
@@ -2588,9 +2813,9 @@ def checkDistributorPaymentTerms(request, id):
                 description=f"Current  payment terms of {dis_name} is expiring",
             )
             d.save()
-        noti = DNotification.objects.filter(
-            status="New", distributor=com
-        ).order_by("-id", "-noti_date")
+        noti = DNotification.objects.filter(status="New", distributor=com).order_by(
+            "-id", "-noti_date"
+        )
         n = len(noti)
 
         # Calculate the date 20 days before the end date for payment term renew and 10 days before for trial period renew
@@ -2615,6 +2840,7 @@ def checkDistributorPaymentTerms(request, id):
             {"status": False, "message": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
 
 @api_view(("GET",))
 def getDistributorProfileData(request, id):
@@ -2702,13 +2928,11 @@ def editDistributorProfile(request):
         distr = Distributor.objects.get(user=data)
 
         logSerializer = UserSerializer(data, data=request.data)
-        serializer = DistributorSerializer(
-            distr, data=request.data, partial=True
-        )
+        serializer = DistributorSerializer(distr, data=request.data, partial=True)
 
-        fName = request.data['first_name']
-        lName = request.data['last_name']
-        email = request.data['email']
+        fName = request.data["first_name"]
+        lName = request.data["last_name"]
+        email = request.data["email"]
 
         if fName != "":
             data.first_name = fName
@@ -2740,6 +2964,844 @@ def editDistributorProfile(request):
             {"status": False, "message": "Distributor details not found"},
             status=status.HTTP_404_NOT_FOUND,
         )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(("GET",))
+def fetchDistNotifications(request, id):
+    try:
+        s_id = id
+        data = User.objects.get(id=s_id)
+        com = Distributor.objects.get(user=data)
+        noti = DNotification.objects.filter(
+            status="New", distributor=com
+        ).order_by("-id", "-noti_date")
+        serializer = DNotificationsSerializer(noti, many=True)
+        return Response(
+            {"status": True, "notifications": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(("GET",))
+def getDistributorNotificationOverview(request, id):
+    try:
+        data = DNotification.objects.get(id=id)
+        com = Company.objects.get(user=data.user)
+        modules = Modules_List.objects.get(company=com, status="New")
+        serializer = ModulesListSerializer(modules)
+        req = {
+            "id": data.id,
+            "user": "Company",
+            "name": com.company_name,
+            "email": com.email,
+            "code": com.company_code,
+            "contact": com.contact,
+            "username": com.user.username,
+            "image": com.image.url if com.image else None,
+            "endDate": com.end_date,
+            "termUpdation": True if data.payment_terms_updation else False,
+            "moduleUpdation": True if data.module_list else False,
+            "term": (
+                str(com.payment_term.payment_terms_number)
+                + " "
+                + com.payment_term.payment_terms_value
+                if com.payment_term
+                else "Trial Period"
+            ),
+            "newTerm": (
+                str(data.payment_terms_updation.payment_term.payment_terms_number)
+                + " "
+                + data.payment_terms_updation.payment_term.payment_terms_value
+                if data.payment_terms_updation
+                else ""
+            ),
+        }
+        if data.module_list:
+            modules_pending = Modules_List.objects.filter(
+                user=data.user, status="pending"
+            )
+            current_modules = Modules_List.objects.filter(
+                user=data.user, status="New"
+            )
+
+            # Extract the field names related to modules
+            module_fields = [
+                field.name
+                for field in Modules_List._meta.fields
+                if field.name
+                not in [
+                    "id",
+                    "company",
+                    "status",
+                    "update_action",
+                    "company",
+                    "user",
+                ]
+            ]
+
+            # Get the previous and new values for the selected modules
+            previous_values = current_modules.values(*module_fields).first()
+            new_values = modules_pending.values(*module_fields).first()
+
+            # Iterate through the dictionary and replace None with 0
+            for key, value in previous_values.items():
+                if value is None:
+                    previous_values[key] = 0
+
+            # Iterate through the dictionary and replace None with 0
+            for key, value in new_values.items():
+                if value is None:
+                    new_values[key] = 0
+
+            # Identify added and deducted modules
+            added_modules = {}
+            deducted_modules = {}
+
+            for field in module_fields:
+                if new_values[field] > previous_values[field]:
+                    added_modules[field] = new_values[field] - previous_values[field]
+                elif new_values[field] < previous_values[field]:
+                    deducted_modules[field] = previous_values[field] - new_values[field]
+
+            return Response(
+                {
+                    "status": True,
+                    "data": req,
+                    "modules": serializer.data,
+                    "added_modules": added_modules,
+                    "deducted_modules": deducted_modules,
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response({"status": True, "data": req}, status=status.HTTP_200_OK)
+    except Company.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Company not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Distributor.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Distributor not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(("POST",))
+def distributorModuleUpdationAccept(request):
+    try:
+        id = request.data["id"]
+        data = DNotification.objects.get(id=id)
+        allmodules = Modules_List.objects.get(user=data.user, status="New")
+        allmodules.delete()
+
+        allmodules1 = Modules_List.objects.get(
+            user=data.user, status="pending"
+        )
+        allmodules1.status = "New"
+        allmodules1.save()
+
+        data.status = "old"
+        data.save()
+
+        # notification
+        CNotification.objects.create(
+            user=allmodules1.user,
+            company=allmodules1.company,
+            title="Modules Updated..!",
+            description="Your module update request is approved",
+        )
+
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("DELETE",))
+def distributorModuleUpdationReject(request):
+    try:
+        id = request.data["id"]
+        data = DNotification.objects.get(id=id)
+        allmodules = Modules_List.objects.get(
+            user=data.user, status="pending"
+        )
+        allmodules.delete()
+
+        data.delete()
+
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(("GET",))
+def getSelfData(request, id):
+    try:
+        data = User.objects.get(id=id)
+        img = None
+        name = None
+        if data.role == "Company":
+            usrData = Company.objects.get(user=data)
+            img = usrData.image.url if usrData.image else None
+            name = usrData.company_name
+        elif data.role == "Distributor":
+            usrData = Distributor.objects.get(user=data)
+            img = usrData.image.url if usrData.image else None
+            name = data.first_name + " " + data.last_name
+        elif data.role == "Staff":
+            usrData = Staff.objects.get(user=data)
+            img = usrData.image.url if usrData.image else None
+            name = data.first_name + " " + data.last_name
+        else:
+            usrData = None
+
+        details = {"name": name, "image": img}
+
+        return Response({"status": True, "data": details})
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+# Company_Staff
+
+
+@api_view(("GET",))
+def checkCompanyPaymentTerms(request, id):
+    try:
+        s_id = id
+        data = User.objects.get(id=s_id)
+        if data.role == "Company":
+            com = Company.objects.get(user=data)
+            payment_request = Payment_Terms_updation.objects.filter(
+                user=data, status="New"
+            ).exists()
+
+            title2 = ["Modules Updated..!", "New Plan Activated..!"]
+            today_date = date.today()
+            notification = CNotification.objects.filter(
+                status="New", company=com, title__in=title2, noti_date__lt=today_date
+            ).order_by("-id", "-noti_date")
+            notification.update(status="old")
+
+            diff = (com.end_date - today_date).days
+
+            # payment term and trial period alert notifications for notification page
+            cmp_name = com.company_name
+            if com.payment_term:
+                if (
+                    not CNotification.objects.filter(
+                        company=com, title="Payment Terms Alert", status="New"
+                    ).exists()
+                    and diff <= 20
+                ):
+
+                    n = CNotification(
+                        user=data,
+                        company=com,
+                        title="Payment Terms Alert",
+                        description="Your Payment Terms End Soon",
+                    )
+                    n.save()
+                    if com.registration_type == "self":
+                        d = ANotification(
+                            user=data,
+                            title="Payment Terms Alert",
+                            description=f"Current  payment terms of {cmp_name} is expiring",
+                        )
+                    else:
+                        d = DNotification(
+                            user=data,
+                            distributor=com.distributor,
+                            title="Payment Terms Alert",
+                            description=f"Current  payment terms of {cmp_name} is expiring",
+                        )
+
+                    d.save()
+            else:
+                if (
+                    not CNotification.objects.filter(
+                        company=com, title="Trial Period Alert", status="New"
+                    ).exists()
+                    and diff <= 10
+                ):
+                    n = CNotification(
+                        user=data,
+                        company=com,
+                        title="Trial Period Alert",
+                        description="Your Trial Period End Soon",
+                    )
+                    n.save()
+
+                    if com.registration_type == "self":
+                        d = ANotification(
+                            user=data,
+                            title="Payment Terms Alert",
+                            description=f"Current  payment terms of {cmp_name} is expiring",
+                        )
+                    else:
+                        d = DNotification(
+                            user=data,
+                            distributor=com.distributor,
+                            title="Payment Terms Alert",
+                            description=f"Current  payment terms of {cmp_name} is expiring",
+                        )
+
+                    d.save()
+
+            # Calculate the date 20 days before the end date for payment term renew and 10 days before for trial period renew
+            if com.payment_term:
+                term = True
+                reminder_date = com.end_date - timedelta(days=20)
+            else:
+                term = False
+                reminder_date = com.end_date - timedelta(days=10)
+            current_date = date.today()
+            alert_message = current_date >= reminder_date
+
+            # Calculate the number of days between the reminder date and end date
+            days_left = (com.end_date - current_date).days
+            return Response(
+                {
+                    "status": True,
+                    "alert_message": alert_message,
+                    "endDate": com.end_date,
+                    "days_left": days_left,
+                    "paymentTerm": term,
+                    "payment_request": payment_request,
+                    "companyName": cmp_name,
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            com = Staff.objects.get(user=data).company
+            return Response(
+                {"status": True, "companyName": com.company_name},
+                status=status.HTTP_200_OK,
+            )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("GET",))
+def getModules(request, id):
+    try:
+        data = User.objects.get(id=id)
+        if data.role == "Company":
+            com = Company.objects.get(user=data)
+        else:
+            com = Staff.objects.get(user=data).company
+        # com = Company.objects.get(user=data)
+        modules = Modules_List.objects.get(company=com, status="New")
+        module_request = Modules_List.objects.filter(
+            company=com, status="pending"
+        ).exists()
+        serializer = ModulesListSerializer(modules)
+        return Response(
+            {
+                "status": True,
+                "module_request": module_request,
+                "modules": serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+    except Company.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Company not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("GET",))
+def getProfileData(request, id):
+    try:
+        data = User.objects.get(id=id)
+        if data.role == "Company":
+            usrData = Company.objects.get(user=data)
+            payment_request = Payment_Terms_updation.objects.filter(
+                user=data, status="New"
+            ).exists()
+            personal = {
+                "companyLogo": usrData.image.url if usrData.image else False,
+                "userImage": False,
+                "firstName": data.first_name,
+                "lastName": data.last_name,
+                "email": usrData.email,
+                "username": data.username,
+                "companyContact": usrData.contact,
+                "userContact": "",
+            }
+            company = {
+                "businessName": usrData.business_name,
+                "companyName": usrData.company_name,
+                "companyType": usrData.company_type,
+                "industry": usrData.industry,
+                "companyCode": usrData.company_code,
+                "companyEmail": usrData.email,
+                "panNumber": usrData.pan_no,
+                "gstType": usrData.gst_type,
+                "gstNo": usrData.gst_no,
+                "paymentTerm": (
+                    str(usrData.payment_term.payment_terms_number)
+                    + " "
+                    + usrData.payment_term.payment_terms_value
+                    if usrData.payment_term
+                    else "Trial Period"
+                ),
+                "endDate": usrData.end_date,
+                "address": usrData.address,
+                "city": usrData.city,
+                "state": usrData.state,
+                "pincode": usrData.pincode,
+            }
+
+        if data.role == "Staff":
+            staffData = Staff.objects.get(user=data)
+            payment_request = Payment_Terms_updation.objects.filter(
+                user=staffData.company.user, status="New"
+            ).exists()
+
+            personal = {
+                "companyLogo": False,
+                "userImage": staffData.image.url if staffData.image else False,
+                "firstName": data.first_name,
+                "lastName": data.last_name,
+                "email": staffData.email,
+                "username": data.username,
+                "companyContact": staffData.company.contact,
+                "userContact": staffData.contact,
+            }
+            company = {
+                "businessName": staffData.company.business_name,
+                "companyName": staffData.company.company_name,
+                "companyType": staffData.company.company_type,
+                "industry": staffData.company.industry,
+                "companyCode": staffData.company.company_code,
+                "companyEmail": staffData.company.email,
+                "panNumber": staffData.company.pan_no,
+                "gstType": staffData.company.gst_type,
+                "gstNo": staffData.company.gst_no,
+                "paymentTerm": (
+                    str(staffData.company.payment_term.payment_terms_number)
+                    + " "
+                    + staffData.company.payment_term.payment_terms_value
+                    if staffData.company.payment_term
+                    else "Trial Period"
+                ),
+                "endDate": staffData.company.end_date,
+                "address": staffData.company.address,
+                "city": staffData.company.city,
+                "state": staffData.company.state,
+                "pincode": staffData.company.pincode,
+            }
+
+        return Response(
+            {
+                "status": True,
+                "personalData": personal,
+                "companyData": company,
+                "payment_request": payment_request,
+            },
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("PUT",))
+@parser_classes((MultiPartParser, FormParser))
+def editCompanyProfile(request):
+    try:
+        login_id = request.data["Id"]
+        data = User.objects.get(id=login_id)
+        com = Company.objects.get(user=data)
+
+        logSerializer = UserSerializer(data, data=request.data)
+        serializer = CompanySerializer(com, data=request.data, partial=True)
+
+        fName = request.data['first_name']
+        lName = request.data['last_name']
+        email = request.data['email']
+
+        if fName != "":
+            data.first_name = fName
+        if lName != "":
+            data.last_name = lName
+        if email != "":
+            data.email = email
+
+        data.save()
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"status": False, "data": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # if logSerializer.is_valid():
+        #     logSerializer.save()
+        # else:
+        #     return Response(
+        #         {"status": False, "data": logSerializer.errors},
+        #         status=status.HTTP_400_BAD_REQUEST,
+        #     )
+
+    except User.DoesNotExist:
+        return Response(
+            {"status": False, "message": "User details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Company.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Company details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("PUT",))
+@parser_classes((MultiPartParser, FormParser))
+def editStaffProfile(request):
+    try:
+        login_id = request.data["Id"]
+        data = User.objects.get(id=login_id)
+        stf = Staff.objects.get(user=data)
+
+        logSerializer = UserSerializer(data, data=request.data)
+        serializer = StaffSerializer(stf, data=request.data, partial=True)
+
+        fName = request.data["first_name"]
+        lName = request.data["last_name"]
+        email = request.data["email"]
+
+        if fName != "":
+            data.first_name = fName
+        if lName != "":
+            data.last_name = lName
+        if email != "":
+            data.email = email
+
+        data.save()
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"status": False, "data": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    except User.DoesNotExist:
+        return Response(
+            {"status": False, "message": "User details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Staff.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Staff details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(("GET",))
+def getStaffRequests(request, id):
+    try:
+        data = User.objects.get(id=id)
+        com = Company.objects.get(user=data)
+        data1 = Staff.objects.filter(company=com, company_approval_status="NULL")
+        requests = []
+        for i in data1:
+            req = {
+                "id": i.id,
+                "name": i.user.first_name + " " + i.user.last_name,
+                "email": i.email,
+                "contact": i.contact,
+                "username": i.user.username,
+            }
+            requests.append(req)
+
+        return Response({"status": True, "data": requests})
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("GET",))
+def getAllStaffs(request, id):
+    try:
+        data = User.objects.get(id=id)
+        com = Company.objects.get(user=data)
+        data1 = Staff.objects.filter(company=com, company_approval_status="Accept")
+        requests = []
+        for i in data1:
+            req = {
+                "id": i.id,
+                "name": i.user.first_name + " " + i.user.last_name,
+                "email": i.email,
+                "contact": i.contact,
+                "username": i.user.username,
+            }
+            requests.append(req)
+
+        return Response({"status": True, "data": requests})
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("PUT",))
+def staffRequestAccept(request, id):
+    try:
+        data = Staff.objects.get(id=id)
+        data.company_approval_status = "Accept"
+        data.save()
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Staff.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Staff details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("DELETE",))
+def staffRequestReject(request, id):
+    try:
+        data = Staff.objects.get(id=id)
+        data.user.delete()
+        data.delete()
+        return Response({"status": True}, status=status.HTTP_200_OK)
+    except Staff.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Staff details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        print(e)
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(("POST",))
+def company_gsttype_change(request):
+    try:
+        s_id = request.data["ID"]
+        data = User.objects.get(id=s_id)
+        com = Company.objects.get(user=data)
+
+        # Get data from the form
+
+        # gstno = request.POST.get('gstno')
+        gsttype = request.data["gsttype"]
+
+        com.gst_type = gsttype
+
+        com.save()
+
+        # Check if gsttype is one of the specified values
+        if gsttype in ["unregistered Business", "Overseas", "Consumer"]:
+            com.gst_no = ""
+            com.save()
+            return Response(
+                {"status": True, "message": "GST Type changed"},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"status": True, "message": "GST Type changed, add GST Number"},
+                status=status.HTTP_200_OK,
+            )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(("POST",))
+def changeCompanyPaymentTerm(request):
+    try:
+        s_id = request.data["ID"]
+        data = User.objects.get(id=s_id)
+        com = Company.objects.get(user=data)
+        pt = request.data["payment_term"]
+
+        pay = PaymentTerms.objects.get(id=pt)
+
+        data1 = Payment_Terms_updation(user=data, payment_term=pay)
+        data1.save()
+
+        if com.registration_type == "self":
+            noti = ANotification(
+                user=data,
+                payment_terms_updation=data1,
+                title="Change Payment Terms",
+                description=com.company_name + " wants to subscribe a new plan",
+            )
+            noti.save()
+        else:
+            noti = DNotification(
+                distributor=com.distributor,
+                user=data,
+                payment_terms_updation=data1,
+                title="Change Payment Terms",
+                description=com.company_name + " wants to subscribe a new plan",
+            )
+            noti.save()
+
+        return Response(
+            {"status": True, "message": "Request Sent.!"}, status=status.HTTP_200_OK
+        )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+    
+
+@api_view(("POST",))
+def editModules(request):
+    try:
+        login_id = request.data["user"]
+        data = User.objects.get(id=login_id)
+        com = Company.objects.get(user=data)
+
+        request.data["company"] = com.id
+        request.data["status"] = "pending"
+
+        serializer = ModulesListSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            data1 = Modules_List.objects.filter(company=com).update(
+                update_action=1
+            )
+            modules = Modules_List.objects.get(id=serializer.data["id"])
+            if com.registration_type == "self":
+                noti = ANotification(
+                    user=data,
+                    module_list=modules,
+                    title="Module Updation",
+                    description=com.company_name + " wants to update current Modules",
+                )
+                noti.save()
+            else:
+                noti = DNotification(
+                    distributor=com.distributor,
+                    user=data,
+                    module_list=modules,
+                    title="Module Updation",
+                    description=com.company_name + " wants to update current Modules",
+                )
+                noti.save()
+
+            return Response(
+                {"status": True, "data": serializer.data}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"status": False, "data": serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+    except User.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Login details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Company.DoesNotExist:
+        return Response(
+            {"status": False, "message": "Company details not found"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        return Response(
+            {"status": False, "message": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+@api_view(("GET",))
+def fetchNotifications(request, id):
+    try:
+        s_id = id
+        data = User.objects.get(id=s_id)
+        if data.role == "Company":
+            com = Company.objects.get(user=data)
+            noti = CNotification.objects.filter(
+                status="New", company=com
+            ).order_by("-id", "-noti_date")
+            serializer = CNotificationsSerializer(noti, many=True)
+            return Response(
+                {"status": True, "notifications": serializer.data, 'count':len(noti)},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            com = Staff.objects.get(user=data).company
+            nCount = CNotification.objects.filter(company = com, status = 'New')
+            return Response(
+                {"status": True, "notifications": None, 'count':len(nCount)}, status=status.HTTP_200_OK
+            )
     except Exception as e:
         return Response(
             {"status": False, "message": str(e)},

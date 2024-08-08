@@ -41,3 +41,18 @@ class ModulesListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Modules_List
         fields = '__all__'
+
+class CNotificationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CNotification
+        fields = '__all__'
+
+class ANotificationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ANotification
+        fields = '__all__'
+
+class DNotificationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DNotification
+        fields = '__all__'

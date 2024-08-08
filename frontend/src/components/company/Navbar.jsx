@@ -1,29 +1,142 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Dropdown } from "react-bootstrap";
-import { Link } from "react-router-dom";
-import { Trans } from "react-i18next";
-import './styles/Navbar.css'
-import 'bootstrap/dist/css/bootstrap.css';
-import logo from '../../assets/images/logo.svg'
+import { Link, useNavigate } from "react-router-dom";
+import { Trans, useSSR } from "react-i18next";
+import "./styles/Navbar.css";
+import "bootstrap/dist/css/bootstrap.css";
+import Cookies from "js-cookie";
+import config from "../../functions/config";
+import axios from "axios";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const [showFullLogo, setShowFullLogo] = useState(true);
+
   const toggleOffcanvas = () => {
     document.querySelector(".sidebar-offcanvas").classList.toggle("active");
+    // setShowFullLogo(!showFullLogo)
   };
+
+  function toggleSidebar() {
+    document.body.classList.toggle("sidebar-icon-only");
+    setShowFullLogo(!showFullLogo);
+  }
+
+  const user = Cookies.get("role");
+  var is_company = false;
+  if (user === "Company") {
+    is_company = true;
+  }
+  const ID = Cookies.get("user_id");
+  const [noti, setNoti] = useState(false);
+  const [notification, setNotification] = useState([]);
+  const [stockAlerts, setStockAlerts] = useState([]);
+  const [custCreditLimitAlerts, setCustCreditLimitAlerts] = useState([]);
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  const fetchNotifications = () => {
+    axios
+      .get(`${config.base_url}/fetch_notifications/${ID}/`)
+      .then((res) => {
+        if (res.data.status) {
+          var ntfs = res.data.notifications;
+          setNoti(res.data.status);
+          setNotificationCount(res.data.count);
+          setNotification([]);
+          ntfs.map((i) => {
+            var obj = {
+              title: i.title,
+              desc: i.description,
+              date: i.date_created,
+              time: i.time,
+            };
+            setNotification((prevState) => [...prevState, obj]);
+          });
+        }
+      })
+      .catch((err) => {
+        console.log("ERROR", err);
+      });
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const [loginName, setLoginName] = useState("");
+  const [loginImage, setLoginImage] = useState("");
+
+  const getLogDetails = () => {
+    axios
+      .get(`${config.base_url}/user/${ID}/`)
+      .then((res) => {
+        if (res.data.status) {
+          const details = res.data.data;
+          var logImg = null;
+          if (details.image) {
+            logImg = `${config.base_url}/${details.image}`;
+          }
+          setLoginImage(logImg);
+          setLoginName(details.name);
+        }
+      })
+      .catch((err) => {
+        console.log("ERROR==", err);
+      });
+  };
+
+  useEffect(() => {
+    getLogDetails();
+  }, []);
+
+  function formatTimeInput(timeString) {
+    let [hours, minutes] = timeString.split(":").slice(0, 2);
+
+    hours = parseInt(hours, 10);
+
+    let meridiem = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12; // Handle midnight (0) and noon (12)
+
+    hours = String(hours).padStart(2, "0");
+    minutes = String(minutes).padStart(2, "0");
+
+    return `${hours}:${minutes} ${meridiem}`;
+  }
 
   const toggleRightSidebar = () => {
     document.querySelector(".right-sidebar").classList.toggle("open");
   };
 
+  function handleLogout() {
+    Cookies.remove("role");
+    Cookies.remove("user_id");
+    Cookies.remove("access");
+    Cookies.remove("refresh");
+    navigate("/");
+  }
+
   return (
     <nav className="admin-nav navbar col-lg-12 col-12 p-0 fixed-top d-flex flex-row justify-content-between">
       <div className="text-center navbar-brand-wrapper d-flex align-items-center justify-content-center">
-        <Link className="navbar-brand brand-logo pl-4 d-lg-block d-none" to="/">
-          {/* <img src={logo} alt="logo" /> */}
-          <h2 className="text-muted">AltosBalance</h2>
-
-        </Link>
-        <Link className="navbar-brand brand-logo-mini d-block d-lg-none pl-4" to="/">
+        {showFullLogo ? (
+          <Link
+            className="navbar-brand brand-logo pl-4 d-lg-block d-none"
+            to="/company_home"
+          >
+            <h2 className="text-muted">AltosBalance</h2>
+          </Link>
+        ) : (
+          <Link
+            className="navbar-brand brand-logo pl-4 d-lg-block d-none"
+            to="/company_home"
+          >
+            <h2 className="text-muted">AB</h2>
+          </Link>
+        )}
+        <Link
+          className="navbar-brand brand-logo-mini d-block d-lg-none pl-4"
+          to="/company_home"
+        >
           {/* <img src={require("../../assets/images/logo-mini.svg")} alt="logo" /> */}
           <h2 className="text-muted">AB</h2>
         </Link>
@@ -33,7 +146,7 @@ const Navbar = () => {
           <button
             className="navbar-toggler navbar-toggler align-self-center  d-none d-lg-block"
             type="button"
-            onClick={() => document.body.classList.toggle("sidebar-icon-only")}
+            onClick={toggleSidebar}
           >
             <span className="mdi mdi-menu"></span>
           </button>
@@ -52,86 +165,102 @@ const Navbar = () => {
             </form>
           </div>
         </div>
-        <div className="right">
+        <div className="right pr-5">
           <ul className="navbar-nav navbar-nav-right d-flex flex-row">
-            <li className="nav-item ml-2">
-            <Dropdown alignRight>
-                <Dropdown.Toggle className="nav-link count-indicator navDropButtons">
-                  <i className="mdi mdi-bell-outline"></i>
-                  <span className="count-symbol bg-danger"></span>
-                </Dropdown.Toggle>
-                <Dropdown.Menu className="dropdown-menu navbar-dropdown preview-list">
-                  <h6 className="p-3 mb-0">
-                    <Trans>Notifications</Trans>
-                  </h6>
-                  <div className="dropdown-divider"></div>
-                  <Dropdown.Item
-                    className="dropdown-item preview-item"
-                    onClick={(evt) => evt.preventDefault()}
-                  >
-                    <div className="preview-item-content d-flex align-items-start flex-column justify-content-center">
-                      <div className="notification_head d-flex align-items-center justify-content-between">
-                        <h6 className="preview-subject font-weight-normal mb-1">
-                          <Trans>Launch Admin</Trans>
-                        </h6>
-                        <span className="ml-5">31-07-2024</span>
-                      </div>
-                      <p className="text-gray ellipsis mb-0">
-                        <Trans>New admin wow</Trans>!
-                      </p>
-                    </div>
-                  </Dropdown.Item>
-                  <div className="dropdown-divider"></div>
-                  <h6 className="p-3 mb-0 text-center cursor-pointer">
-                    <Trans>See all notifications</Trans>
-                  </h6>
-                </Dropdown.Menu>
-              </Dropdown>
-            </li>
-            {/* <li className="nav-item nav-logout d-none d-lg-block">
+            <li className="nav-item dropdown dropdown-lg">
               <a
-                className="nav-link"
-                href="!#"
-                onClick={(event) => event.preventDefault()}
+                className="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative notification-dropdown-button"
+                href="javascript:;"
+                data-toggle="dropdown"
               >
-                <i className="mdi mdi-power"></i>
+                <i
+                  className="mdi mdi-bell-outline vertical-align-middle"
+                  style={{ fontSize: "25px", color: "grey" }}
+                ></i>
+                <span className="msg-count">{notificationCount}</span>
               </a>
-            </li> */}
-            <li className="nav-item nav-profile ml-2 mr-2">
+              <div className="dropdown-menu dropdown-menu-right position-absolute noti-drop-menu">
+                <a className="p-0" href="javascript:;">
+                  <div className="noti-msg-header w-100">
+                    <h6 className="noti-msg-header-title font-weight-bold">
+                      {notificationCount} New
+                    </h6>
+                    <p className="noti-msg-header-subtitle">
+                      Application Notifications
+                    </p>
+                  </div>
+                </a>
+                <div className="header-notifications-list">
+                  {noti ? (
+                    <>
+                      {notification.map((item) => (
+                        <Link
+                          className="dropdown-item w-100 noti-item"
+                          to="#"
+                        >
+                          <div className="media align-items-center w-100">
+                            <div className="media-body">
+                              <h6 className="msg-name w-100 mb-0">
+                                {item.title}
+                                <p
+                                  className="msg-time m-0"
+                                  style={{ fontSize: "0.7rem" }}
+                                >
+                                  {item.date} {formatTimeInput(item.time)}
+                                </p>
+                              </h6>
+                              <p className="msg-info">{item.desc}</p>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                      <Link
+                        className="w-100 justify-content-center"
+                        to="#"
+                      >
+                        <p className="msg-info text-center">
+                          View All Notifications
+                        </p>
+                      </Link>
+                    </>
+                  ) : (
+                    <p className="msg-info text-center mt-5">
+                      Notifications is not found
+                    </p>
+                  )}
+                </div>
+              </div>
+            </li>
+            <li className="nav-item nav-profile ml-5 mr-2">
               <Dropdown alignRight>
                 <Dropdown.Toggle className="nav-link d-flex align-items-center navDropButtons">
                   <div className="nav-profile-img">
-                    <img
-                      src={require("../../assets/images/faces/face1.jpg")}
-                      alt="user"
-                    />
+                    {loginImage && loginImage != "" ? (
+                      <img src={loginImage} alt="user" />
+                    ) : (
+                      <img
+                        src={require("../../assets/images/faces/user-1.jpg")}
+                        alt="user"
+                      />
+                    )}
                     <span className="availability-status online"></span>
                   </div>
                   <div className="nav-profile-text">
                     <p className="mb-1 text-grey font-weight-bold">
-                      <Trans>David Greymaax</Trans>
+                      <Trans>{loginName != null ? loginName : "Company"}</Trans>
                     </p>
                   </div>
                 </Dropdown.Toggle>
                 <Dropdown.Menu className="navbar-dropdown">
-                  <Dropdown.Item
-                    href="!#"
-                    onClick={(evt) => evt.preventDefault()}
-                  >
+                  <Dropdown.Item onClick={() => navigate("/company_profile")}>
                     <i className="mdi mdi-account mr-2 text-success"></i>
                     <Trans>Profile</Trans>
                   </Dropdown.Item>
-                  <Dropdown.Item
-                    href="!#"
-                    onClick={(evt) => evt.preventDefault()}
-                  >
+                  <Dropdown.Item onClick={() => navigate("/company_home")}>
                     <i className="mdi mdi-home mr-2 text-secondary"></i>
                     <Trans>Dashboard</Trans>
                   </Dropdown.Item>
-                  <Dropdown.Item
-                    href="!#"
-                    onClick={(evt) => evt.preventDefault()}
-                  >
+                  <Dropdown.Item onClick={handleLogout}>
                     <i className="mdi mdi-logout mr-2 text-danger"></i>
                     <Trans>Logout</Trans>
                   </Dropdown.Item>

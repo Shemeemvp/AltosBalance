@@ -29,6 +29,20 @@ import DClientReqOverview from "./components/distributor/DClientReqOverview";
 import DClientOverview from "./components/distributor/DClientOverview";
 import DistributorProfile from "./components/distributor/DistributorProfile";
 import DistributorProfileEdit from "./components/distributor/DistributorProfileEdit";
+import CompanyPrivateRoutes from "./components/routes/CompanyPrivateRoutes";
+import CompanyStaffPrivateRoutes from "./components/routes/CompanyStaffPrivateRoutes";
+import CompanyHome from "./components/company/CompanyHome";
+import CompanyProfile from "./components/company/CompanyProfile";
+import EditCompanyProfile from "./components/company/EditCompanyProfile";
+import EditStaffProfile from "./components/staff/EditStaffProfile";
+import StaffReq from "./components/company/StaffReq";
+import AllStaffs from "./components/company/AllStaffs";
+import EditModules from "./components/company/EditModules";
+import Wrong from "./components/company/Wrong";
+import AdminNotifications from "./components/admin/AdminNotifications";
+import NotificationOverview from "./components/admin/NotificationOverview";
+import DistNotifications from "./components/distributor/DistNotifications";
+import DistNotificationOverview from "./components/distributor/DistNotificationOverview";
 
 function App() {
   return (
@@ -40,7 +54,7 @@ function App() {
           <Route path="/company_registration" element={<CompanyReg />}></Route>
           <Route path="/company_registration2" element={<CompanyReg2 />}></Route>
           <Route path="/modules_list" element={<Modules />}></Route>
-          {/* <Route path="/wrong" element={<Wrong />}></Route> */}
+          <Route path="/wrong" element={<Wrong />}></Route>
           {/* <Route path="/term_update_modules" element={<TermUpdateModules />}></Route> */}
 
           <Route path="/distributor_registration" element={<DistributorReg />}></Route>
@@ -62,18 +76,30 @@ function App() {
             <Route path="/distributors_requests" element={<DistributorsReq />}></Route>
             <Route path="/distributors_request_overview/:id/" element={<DistributorReqOverview />}></Route>
             <Route path="/all_distributors_overview/:id/" element={<AllDistributorsOverview />}></Route>
-
+            <Route path="/admin_notifications" element={<AdminNotifications />}></Route>
+            <Route path="/anotification_overview/:id/" element={<NotificationOverview />}></Route>
           </Route>
           <Route element={<DistributorPrivateRoutes />}>
             <Route path="/distributor_home" element={<DistributorHome />}></Route>
-            {/* <Route path="/distributor_notifications" element={<DistNotifications />}></Route> */}
-            {/* <Route path="/dnotification_overview/:id/" element={<DistNotificationOverview />}></Route> */}
+            <Route path="/distributor_notifications" element={<DistNotifications />}></Route>
+            <Route path="/dnotification_overview/:id/" element={<DistNotificationOverview />}></Route>
             <Route path="/distributor_profile" element={<DistributorProfile />}></Route>
             <Route path="/edit_distributor_profile" element={<DistributorProfileEdit />}></Route>
             <Route path="/DClient_req" element={<DClientReq />}></Route>
             <Route path="/DClients" element={<DAllClients />}></Route>
             <Route path="/DClient_request_overview/:id/" element={<DClientReqOverview />}></Route>
             <Route path="/DClient_overview/:id/" element={<DClientOverview />}></Route>
+          </Route>
+          <Route element={<CompanyPrivateRoutes />}>
+            <Route path="/company_staffs/staff_requests" element={<StaffReq />}></Route>
+            <Route path="/company_staffs/all_staffs" element={<AllStaffs />}></Route>
+            <Route path="/edit_company_profile" element={<EditCompanyProfile />}></Route>
+            <Route path="/edit_modules" element={<EditModules />}></Route>
+          </Route>
+          <Route element={<CompanyStaffPrivateRoutes />}>
+            <Route path="/company_home" element={<CompanyHome />}></Route>
+            <Route path="/company_profile" element={<CompanyProfile />}></Route>
+            <Route path="/edit_staff_profile" element={<EditStaffProfile />}></Route>
           </Route>
         </Routes>
       </BrowserRouter>

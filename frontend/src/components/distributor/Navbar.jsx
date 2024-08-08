@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dropdown } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { Trans, useSSR } from "react-i18next";
 import "./styles/Navbar.css";
 import "bootstrap/dist/css/bootstrap.css";
 import Cookies from "js-cookie";
+import config from "../../functions/config";
+import axios from "axios";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -15,9 +17,81 @@ const Navbar = () => {
     // setShowFullLogo(!showFullLogo)
   };
 
-  function toggleSidebar(){
+  function toggleSidebar() {
     document.body.classList.toggle("sidebar-icon-only");
     setShowFullLogo(!showFullLogo);
+  }
+
+  const [loginName, setLoginName] = useState("");
+  const [loginImage, setLoginImage] = useState("");
+
+  const ID = Cookies.get("user_id");
+  const getDistributorDetails = () => {
+    axios
+      .get(`${config.base_url}/user/${ID}/`)
+      .then((res) => {
+        console.log(res);
+        if (res.data.status) {
+          const details = res.data.data;
+          var logImg = null;
+          if (details.image) {
+            logImg = `${config.base_url}/${details.image}`;
+          }
+          setLoginImage(logImg);
+          setLoginName(details.name);
+        }
+      })
+      .catch((err) => {
+        console.log("ERROR==", err);
+      });
+  };
+
+  useEffect(() => {
+    getDistributorDetails();
+  }, []);
+
+  const [noti, setNoti] = useState(false);
+  const [notification, setNotification] = useState([]);
+  const fetchNotifications = () => {
+    axios
+      .get(`${config.base_url}/fetch_dist_notifications/${ID}/`)
+      .then((res) => {
+        if (res.data.status) {
+          var ntfs = res.data.notifications;
+          setNoti(res.data.status);
+          setNotification([]);
+          ntfs.map((i) => {
+            var obj = {
+              title: i.title,
+              desc: i.description,
+              date: i.date_created,
+              time: i.time,
+            };
+            setNotification((prevState) => [...prevState, obj]);
+          });
+        }
+      })
+      .catch((err) => {
+        console.log("ERROR", err);
+      });
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  function formatTimeInput(timeString) {
+    let [hours, minutes] = timeString.split(":").slice(0, 2);
+
+    hours = parseInt(hours, 10);
+
+    let meridiem = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12; // Handle midnight (0) and noon (12)
+
+    hours = String(hours).padStart(2, "0");
+    minutes = String(minutes).padStart(2, "0");
+
+    return `${hours}:${minutes} ${meridiem}`;
   }
 
   const toggleRightSidebar = () => {
@@ -84,58 +158,96 @@ const Navbar = () => {
         </div>
         <div className="right pr-5">
           <ul className="navbar-nav navbar-nav-right d-flex flex-row">
-            <li className="nav-item ml-2">
-              <Dropdown alignRight>
-                <Dropdown.Toggle className="nav-link count-indicator navDropButtons">
-                  <i className="mdi mdi-bell-outline"></i>
-                  <span className="count-symbol bg-danger"></span>
-                </Dropdown.Toggle>
-                <Dropdown.Menu className="dropdown-menu navbar-dropdown preview-list">
-                  <h6 className="p-3 mb-0">
-                    <Trans>Notifications</Trans>
-                  </h6>
-                  <div className="dropdown-divider"></div>
-                  <Dropdown.Item
-                    className="dropdown-item preview-item"
-                    onClick={(evt) => evt.preventDefault()}
-                  >
-                    <div className="preview-item-content d-flex align-items-start flex-column justify-content-center">
-                      <div className="notification_head d-flex align-items-center justify-content-between">
-                        <h6 className="preview-subject font-weight-normal mb-1">
-                          <Trans>Launch Distributor</Trans>
-                        </h6>
-                        <span className="ml-5">31-07-2024</span>
-                      </div>
-                      <p className="text-gray ellipsis mb-0">
-                        <Trans>New Distributor wow</Trans>!
-                      </p>
-                    </div>
-                  </Dropdown.Item>
-                  <div className="dropdown-divider"></div>
-                  <h6 className="p-3 mb-0 text-center cursor-pointer">
-                    <Trans>See all notifications</Trans>
-                  </h6>
-                </Dropdown.Menu>
-              </Dropdown>
+            <li className="nav-item dropdown dropdown-lg">
+              <a
+                className="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative notification-dropdown-button"
+                href="javascript:;"
+                data-toggle="dropdown"
+              >
+                <i
+                  className="mdi mdi-bell-outline vertical-align-middle"
+                  style={{ fontSize: "25px", color: "grey" }}
+                ></i>
+                <span className="msg-count">{notification.length}</span>
+              </a>
+              <div className="dropdown-menu dropdown-menu-right position-absolute noti-drop-menu">
+                <a className="p-0" href="javascript:;">
+                  <div className="noti-msg-header w-100">
+                    <h6 className="noti-msg-header-title font-weight-bold">
+                      {notification.length} New
+                    </h6>
+                    <p className="noti-msg-header-subtitle">
+                      Application Notifications
+                    </p>
+                  </div>
+                </a>
+                <div className="header-notifications-list">
+                  {noti ? (
+                    <>
+                      {notification.map((item) => (
+                        <Link
+                          className="dropdown-item w-100 noti-item"
+                          to="/distributor_notifications"
+                        >
+                          <div className="media align-items-center w-100">
+                            <div className="media-body">
+                              <h6 className="msg-name w-100 mb-0">
+                                {item.title}
+                                <p
+                                  className="msg-time m-0"
+                                  style={{ fontSize: "0.7rem" }}
+                                >
+                                  {item.date} {formatTimeInput(item.time)}
+                                </p>
+                              </h6>
+                              <p className="msg-info">{item.desc}</p>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                      <Link
+                        className="w-100 justify-content-center"
+                        to="/distributor_notifications"
+                      >
+                        <p className="msg-info text-center">
+                          View All Notifications
+                        </p>
+                      </Link>
+                    </>
+                  ) : (
+                    <p className="msg-info text-center mt-5">
+                      Notifications is not found
+                    </p>
+                  )}
+                </div>
+              </div>
             </li>
             <li className="nav-item nav-profile ml-5 mr-2">
               <Dropdown alignRight>
                 <Dropdown.Toggle className="nav-link d-flex align-items-center navDropButtons">
                   <div className="nav-profile-img">
-                    <img
-                      src={require("../../assets/images/faces/user-1.jpg")}
-                      alt="user"
-                    />
+                    {loginImage && loginImage != "" ? (
+                      <img src={loginImage} alt="user" />
+                    ) : (
+                      <img
+                        src={require("../../assets/images/faces/user-1.jpg")}
+                        alt="user"
+                      />
+                    )}
                     <span className="availability-status online"></span>
                   </div>
                   <div className="nav-profile-text">
                     <p className="mb-1 text-grey font-weight-bold">
-                      <Trans>Distributor</Trans>
+                      <Trans>
+                        {loginName != null ? loginName : "Distributor"}
+                      </Trans>
                     </p>
                   </div>
                 </Dropdown.Toggle>
                 <Dropdown.Menu className="navbar-dropdown">
-                  <Dropdown.Item onClick={() => navigate("/distributor_profile")}>
+                  <Dropdown.Item
+                    onClick={() => navigate("/distributor_profile")}
+                  >
                     <i className="mdi mdi-account mr-2 text-success"></i>
                     <Trans>Profile</Trans>
                   </Dropdown.Item>

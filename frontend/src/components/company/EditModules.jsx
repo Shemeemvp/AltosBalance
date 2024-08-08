@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../styles/Modules.css";
 import axios from "axios";
 import config from "../../functions/config";
@@ -6,9 +6,9 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
-function Modules() {
+function EditModules() {
   const ID = Cookies.get("user_id");
-  const [formData, setFormData] = useState({
+  const [modules, setModules] = useState({
     c1: null,
     c2: null,
     c3: null,
@@ -47,14 +47,73 @@ function Modules() {
     c36: null,
   });
 
+  const [moduleRequest, setModuleRequest] = useState(false);
+
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
+    setModules({
+      ...modules,
       [e.target.name]: e.target.checked ? "1" : null,
     });
   };
+
+  const fetchModules = () => {
+    axios
+      .get(`${config.base_url}/get_modules/${ID}/`)
+      .then((res) => {
+        if (res.data.status) {
+          const modules = res.data.modules;
+          const m = {
+            c1: modules.Items,
+            c2: modules.Price_List,
+            c3: modules.Stock_Adjustment,
+            c4: modules.Cash_in_hand,
+            c5: modules.Offline_Banking,
+            c6: null,
+            c7: modules.UPI,
+            c8: modules.Bank_Holders,
+            c9: modules.Cheque,
+            c10: modules.Loan_Account,
+            c11: modules.Customers,
+            c12: modules.Invoice,
+            c13: modules.Estimate,
+            c14: modules.Sales_Order,
+            c15: modules.Recurring_Invoice,
+            c16: modules.Retainer_Invoice,
+            c17: modules.Credit_Note,
+            c18: modules.Payment_Received,
+            c19: modules.Delivery_Challan,
+            c20: modules.Vendors,
+            c21: modules.Bills,
+            c22: modules.Recurring_Bills,
+            c23: modules.Debit_Note,
+            c24: modules.Purchase_Order,
+            c25: modules.Expenses,
+            c26: null,
+            c27: modules.Payment_Made,
+            c28: modules.EWay_Bill,
+            c29: modules.Chart_of_Accounts,
+            c30: modules.Manual_Journal,
+            c31: modules.Employees,
+            c32: modules.Employees_Loan,
+            c33: modules.Holiday,
+            c34: modules.Attendance,
+            c35: modules.Salary_Details,
+            c36: null,
+          };
+          setModules(m);
+          setModuleRequest(res.data.module_request);
+        }
+      })
+      .catch((err) => {
+        console.log("MODULES ERROR==", err);
+      });
+  };
+
+  useEffect(() => {
+    fetchModules();
+  }, []);
 
   function toggleSelectAll(source) {
     // Get all checkboxes in the document
@@ -71,7 +130,7 @@ function Modules() {
       updatedFormData[`c${i}`] = source.checked ? "1" : null;
     }
 
-    setFormData(updatedFormData);
+    setModules(updatedFormData);
   }
 
   function handleSubmit(e) {
@@ -79,53 +138,53 @@ function Modules() {
 
     const data = {
       user: ID,
-      Items: formData.c1,
-      Price_List: formData.c2,
-      Stock_Adjustment: formData.c3,
-      Cash_in_hand: formData.c4,
-      Offline_Banking: formData.c5,
-      Bank_Reconciliation: formData.c6,
-      UPI: formData.c7,
-      Bank_Holders: formData.c8,
-      Cheque: formData.c9,
-      Loan_Account: formData.c10,
-      Customers: formData.c11,
-      Invoice: formData.c12,
-      Estimate: formData.c13,
-      Sales_Order: formData.c14,
-      Recurring_Invoice: formData.c15,
-      Retainer_Invoice: formData.c16,
-      Credit_Note: formData.c17,
-      Payment_Received: formData.c18,
-      Delivery_Challan: formData.c19,
-      Vendors: formData.c20,
-      Bills: formData.c21,
-      Recurring_Bills: formData.c22,
-      Debit_Note: formData.c23,
-      Purchase_Order: formData.c24,
-      Expenses: formData.c25,
-      Recurring_Expenses: formData.c26,
-      Payment_Made: formData.c27,
-      EWay_Bill: formData.c28,
-      Chart_of_Accounts: formData.c29,
-      Manual_Journal: formData.c30,
-      Reconcile: formData.c36,
-      Employees: formData.c31,
-      Employees_Loan: formData.c32,
-      Holiday: formData.c33,
-      Attendance: formData.c34,
-      Salary_Details: formData.c35,
+      Items: modules.c1,
+      Price_List: modules.c2,
+      Stock_Adjustment: modules.c3,
+      Cash_in_hand: modules.c4,
+      Offline_Banking: modules.c5,
+      Bank_Reconciliation: modules.c6,
+      UPI: modules.c7,
+      Bank_Holders: modules.c8,
+      Cheque: modules.c9,
+      Loan_Account: modules.c10,
+      Customers: modules.c11,
+      Invoice: modules.c12,
+      Estimate: modules.c13,
+      Sales_Order: modules.c14,
+      Recurring_Invoice: modules.c15,
+      Retainer_Invoice: modules.c16,
+      Credit_Note: modules.c17,
+      Payment_Received: modules.c18,
+      Delivery_Challan: modules.c19,
+      Vendors: modules.c20,
+      Bills: modules.c21,
+      Recurring_Bills: modules.c22,
+      Debit_Note: modules.c23,
+      Purchase_Order: modules.c24,
+      Expenses: modules.c25,
+      Recurring_Expenses: modules.c26,
+      Payment_Made: modules.c27,
+      EWay_Bill: modules.c28,
+      Chart_of_Accounts: modules.c29,
+      Manual_Journal: modules.c30,
+      Employees: modules.c31,
+      Employees_Loan: modules.c32,
+      Holiday: modules.c33,
+      Attendance: modules.c34,
+      Salary_Details: modules.c35,
+      Reconcile: modules.c36,
     };
 
     axios
-      .post(`${config.base_url}/Add_Modules/`, data)
+      .post(`${config.base_url}/Edit_Modules/`, data)
       .then((res) => {
         if (res.data.status) {
           Toast.fire({
             icon: "success",
-            title: "Registered successfully",
+            title: "Request Sent.",
           });
-          navigate("/");
+          navigate("/company_profile");
         }
       })
       .catch((err) => {
@@ -181,7 +240,7 @@ function Modules() {
                   fontWeight: "bold",
                 }}
               >
-                Choose Your Modules..!
+                EDIT MODULES
               </h2>
             </div>
             {/* <!-- Checkbox to select/deselect all --> */}
@@ -228,6 +287,7 @@ function Modules() {
                   name="c1"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c1 ? true : false}
                 />
                 <b
                   style={{
@@ -251,6 +311,7 @@ function Modules() {
                   name="c2"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c2 ? true : false}
                 />
                 <b
                   style={{
@@ -274,6 +335,7 @@ function Modules() {
                   name="c3"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c3 ? true : false}
                 />
                 <b
                   style={{
@@ -314,6 +376,7 @@ function Modules() {
                   name="c4"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c4 ? true : false}
                 />
                 <b
                   style={{
@@ -336,6 +399,7 @@ function Modules() {
                   id="c5"
                   name="c5"
                   value="1"
+                  checked={modules.c5 ? true : false}
                   onChange={handleInputChange}
                 />
                 <b
@@ -364,6 +428,7 @@ function Modules() {
                   name="c7"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c7 ? true : false}
                 />
                 <b
                   style={{
@@ -387,6 +452,7 @@ function Modules() {
                   name="c8"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c8 ? true : false}
                 />
                 <b
                   style={{
@@ -410,6 +476,7 @@ function Modules() {
                   name="c9"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c9 ? true : false}
                 />
                 <b
                   style={{
@@ -433,6 +500,7 @@ function Modules() {
                   name="c10"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c10 ? true : false}
                 />
                 <b
                   style={{
@@ -472,6 +540,7 @@ function Modules() {
                   name="c11"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c11 ? true : false}
                 />
                 <b
                   style={{
@@ -495,6 +564,7 @@ function Modules() {
                   name="c12"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c12 ? true : false}
                 />
                 <b
                   style={{
@@ -518,6 +588,7 @@ function Modules() {
                   name="c13"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c13 ? true : false}
                 />
                 <b
                   style={{
@@ -541,6 +612,7 @@ function Modules() {
                   name="c14"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c14 ? true : false}
                 />
                 <b
                   style={{
@@ -564,6 +636,7 @@ function Modules() {
                   name="c15"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c15 ? true : false}
                 />
                 <b
                   style={{
@@ -587,6 +660,7 @@ function Modules() {
                   name="c16"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c16 ? true : false}
                 />
                 <b
                   style={{
@@ -610,6 +684,7 @@ function Modules() {
                   name="c17"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c17 ? true : false}
                 />
                 <b
                   style={{
@@ -633,6 +708,7 @@ function Modules() {
                   name="c18"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c18 ? true : false}
                 />
                 <b
                   style={{
@@ -656,6 +732,7 @@ function Modules() {
                   name="c19"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c19 ? true : false}
                 />
                 <b
                   style={{
@@ -695,6 +772,7 @@ function Modules() {
                   name="c20"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c20 ? true : false}
                 />
                 <b
                   style={{
@@ -718,6 +796,7 @@ function Modules() {
                   name="c21"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c21 ? true : false}
                 />
                 <b
                   style={{
@@ -741,6 +820,7 @@ function Modules() {
                   name="c22"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c22 ? true : false}
                 />
                 <b
                   style={{
@@ -764,6 +844,7 @@ function Modules() {
                   name="c23"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c23 ? true : false}
                 />
                 <b
                   style={{
@@ -787,6 +868,7 @@ function Modules() {
                   name="c24"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c24 ? true : false}
                 />
                 <b
                   style={{
@@ -810,6 +892,7 @@ function Modules() {
                   name="c25"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c25 ? true : false}
                 />
                 <b
                   style={{
@@ -837,6 +920,7 @@ function Modules() {
                   name="c27"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c27 ? true : false}
                 />
                 <b
                   style={{
@@ -880,6 +964,7 @@ function Modules() {
                   name="c28"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c28 ? true : false}
                 />
                 <b
                   style={{
@@ -919,6 +1004,7 @@ function Modules() {
                   name="c29"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c29 ? true : false}
                 />
                 <b
                   style={{
@@ -942,6 +1028,7 @@ function Modules() {
                   name="c30"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c30 ? true : false}
                 />
                 <b
                   style={{
@@ -985,6 +1072,7 @@ function Modules() {
                   name="c31"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c31 ? true : false}
                 />
                 <b
                   style={{
@@ -1008,6 +1096,7 @@ function Modules() {
                   name="c32"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c32 ? true : false}
                 />
                 <b
                   style={{
@@ -1031,6 +1120,7 @@ function Modules() {
                   name="c33"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c33 ? true : false}
                 />
                 <b
                   style={{
@@ -1054,6 +1144,7 @@ function Modules() {
                   name="c34"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c34 ? true : false}
                 />
                 <b
                   style={{
@@ -1077,6 +1168,7 @@ function Modules() {
                   name="c35"
                   value="1"
                   onChange={handleInputChange}
+                  checked={modules.c35 ? true : false}
                 />
                 <b
                   style={{
@@ -1090,16 +1182,31 @@ function Modules() {
             </div>
             <hr />
 
-            <center className="w-100">
-              <input
-                type="submit"
-                className="next modules-action-button"
-                value="Submit"
-                style={{ width: "20%" }}
-              />
-            </center>
-
-            {/* <!-- <center><input type="submit" className="btn btn-danger p-2 mt-5 mb-3" style="width: 30%;font-weight: bold;border-radius: 10px;"></center> --> */}
+            {moduleRequest ? (
+              <>
+                <center className="w-100">
+                  <input
+                    type="submit"
+                    disabled
+                    class="next modules-action-button"
+                    value="Submit"
+                    style={{ width: "20%" }}
+                  />
+                </center>
+                <p class="text-center text-danger">
+                  You have a pending request, please wait for approval.
+                </p>
+              </>
+            ) : (
+              <center className="w-100">
+                <input
+                  type="submit"
+                  class="next modules-action-button"
+                  value="Submit"
+                  style={{ width: "20%" }}
+                />
+              </center>
+            )}
           </form>
         </div>
       </div>
@@ -1107,4 +1214,4 @@ function Modules() {
   );
 }
 
-export default Modules;
+export default EditModules;
